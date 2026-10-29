@@ -90,6 +90,16 @@ h1{font:400 clamp(54px,9.6vh,104px)/.94 var(--cond);margin:3.5vh 0 0;letter-spac
 #vbar select,#vbar input{flex:1;min-width:0;background:#0d100d;border:1px solid #5c5a55;padding:9px 8px;font-size:12px}
 #vbar .vstat{min-height:14px;font-size:10.5px;letter-spacing:.12em;color:var(--green)}
 #vShow{position:absolute;right:4%;bottom:3.5%;z-index:4;display:none;padding:10px 14px;font-size:10.5px;background:rgba(5,6,5,.7)}
+#vgal{z-index:8;background:rgba(4,5,4,.97);padding:5% 5% 6%;gap:12px}
+#vgal .vg-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.22em}
+#vgal .vg-head .btn{width:44px;padding:10px 0}
+#vgal .vg-grid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;align-content:start}
+#vgal .vg-grid figure{margin:0;display:flex;flex-direction:column;gap:5px}
+#vgal .vg-grid img{width:100%;display:block;border:1px solid #333}
+#vgal .vg-grid a{font-size:10px;letter-spacing:.14em;text-align:center;color:var(--ink);text-decoration:none;border:1px solid #444;padding:6px 2px}
+#vgal .vg-actions{display:flex;flex-direction:column;gap:8px}
+#vgal .vg-actions .btn{text-decoration:none;color:var(--ink)}
+#vgal .vg-actions .btn.red{color:#fff}
 #panel{display:none;width:330px;max-height:calc(100dvh - 24px);overflow:auto;border:1px solid var(--line);background:#080a08;padding:16px 16px 22px;font-size:12px}
 body.diretor #panel{display:block}
 #panel h3{font:700 10.5px var(--mono);letter-spacing:.24em;margin:18px 0 8px;color:var(--dim);text-transform:uppercase}
@@ -130,7 +140,7 @@ body.diretor #panel{display:block}
       <p class="lede" id="introLede">Quanto tempo demora até a <em>sua</em> pele engrossar?</p>
       <ol class="how" id="introHow">
         <li>Rosto de frente, com luz no rosto.</li>
-        <li>Quarenta segundos de feed. Só olhe.</li>
+        <li>Quinze segundos de feed. Só olhe.</li>
         <li>No modo Resistir, cada reação sua faz a pele recuar.</li>
       </ol>
       <div class="modes" id="modeSel">
@@ -166,11 +176,22 @@ body.diretor #panel{display:block}
       <div class="vrow" id="vActs"><button data-act="resistir">RESISTIR</button><button data-act="calar">CALAR</button><button data-act="seguir">SEGUIR</button></div>
       <div class="vrow vworlds" id="vWorlds"><button data-world="palco" class="on">PALCO</button><button data-world="coro">CORO</button><button data-world="arquivo">ARQUIVO</button><button data-world="termica">TÉRMICA</button><button data-world="feed">FEED</button></div>
       <div class="vrow"><select id="vPhrase"></select><input id="vCustom" maxlength="60" placeholder="ou escreva a sua frase" autocomplete="off"></div>
-      <div class="vrow vout"><button id="vPng" class="btn red">↓ Cartaz</button><button id="vVid" class="btn">● Vídeo</button><button id="vPack3" class="btn">↓ 3 stories</button><button id="vPack5" class="btn">↓ 5 cards</button></div>
+      <div class="vrow vout"><button id="vPng" class="btn red">↓ Cartaz</button><button id="vVid" class="btn">● Vídeo</button><button id="vPack3" class="btn">3 stories</button><button id="vPack5" class="btn">5 cards</button></div>
       <div class="vrow"><button id="vBack" class="btn ico" title="Voltar">✕</button><button id="vShare" class="btn" hidden>Compartilhar</button><button id="vHide" class="btn">Ver o cartaz limpo</button></div>
       <div class="vstat" id="vStat"></div>
     </section>
     <button id="vShow" class="btn">Controles</button>
+
+    <section id="vgal" class="overlay">
+      <div class="vg-head"><b id="vgTitle">3 STORIES</b><button class="btn ico" id="vgClose" title="Fechar">✕</button></div>
+      <div class="vg-grid" id="vgGrid"></div>
+      <div class="vg-actions">
+        <button class="btn red" id="vgShare" hidden>Salvar na galeria ou compartilhar</button>
+        <button class="btn" id="vgAll">Baixar as imagens</button>
+        <a class="btn" id="vgZip" download>Baixar tudo em ZIP</a>
+      </div>
+      <p class="fine" id="vgTip">No celular, toque e segure uma imagem para salvar só ela.</p>
+    </section>
 
     <section id="result" class="overlay">
       <div class="r-top">
@@ -195,7 +216,7 @@ body.diretor #panel{display:block}
     <h3>Modo</h3>
     <div class="seg" id="pMode"><button data-mode="assistir" class="on">ASSISTIR</button><button data-mode="resistir">RESISTIR</button></div>
     <h3>Tempo e formato</h3>
-    <label class="s"><span>Duração</span><select id="pDur"><option>20</option><option>30</option><option selected>40</option><option>50</option><option>60</option></select><span>s</span></label>
+    <label class="s"><span>Duração</span><select id="pDur"><option selected>15</option><option>20</option><option>30</option><option>40</option></select><span>s</span></label>
     <div class="seg" id="pFmt"><button data-fmt="story" class="on">STORY 9:16</button><button data-fmt="feed">FEED 4:5</button></div>
     <h3>Progresso</h3>
     <input type="range" id="pProg" min="0" max="1000" value="0">
@@ -274,7 +295,7 @@ const qs = new URLSearchParams(location.search);
 const isMobile = matchMedia('(pointer:coarse)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
 
 const params = {
-  duration: 40, mode: 'assistir', format: 'story',
+  duration: 15, mode: 'assistir', format: 'story',
   look: 1, relief: 1, gloss: 1, deform: 1, hornScale: 1, maskScale: 1, maskLift: 0,
   grain: 0.055, hud: true, keepBg: false, mirror: true,
   exp: qs.get('exp') === 'vista' ? 'vista' : 'pele', world: 'palco', phrase: 'VOCÊ RESISTIRIA?', custom: '',
@@ -342,9 +363,13 @@ const glCanvas = document.createElement('canvas');
 const gl = glCanvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: false });
 
 function outSize() {
-  // ao vivo a câmera entrega 720p: renderizar acima disso só custa quadros
-  const big = !isMobile && S.source !== 'camera' && S.source !== 'video';
+  // 720p para tocar e gravar (leve, e o story não pede mais que isso); 1080 só na hora de exportar imagem parada
+  const big = S.hires;
   return params.format === 'feed' ? (big ? [1080, 1350] : [864, 1080]) : (big ? [1080, 1920] : [720, 1280]);
+}
+async function withHires(fn) {
+  S.hires = true; resizeTargets();
+  try { return await fn(); } finally { S.hires = false; resizeTargets(); }
 }
 
 // ============================================================
@@ -1727,10 +1752,26 @@ function reaction() {
   for (const k of REACT_KEYS) { const v = (S.blend[k] || 0) - ((S.baseline && S.baseline[k]) || 0); if (v > e) e = v; }
   return smooth(0.10, 0.42, e);
 }
+// ritmo: as primeiras rachaduras chegam rápido, o meio anda firme e o clímax (chifre, câmera recuando,
+// máscara) ganha mais tempo. Curva monótona suave passando por estes pontos (tempo → progresso).
+const PACE_X = [0, 0.12, 0.55, 1], PACE_Y = [0, 0.30, 0.76, 1];
+const PACE_M = (() => {
+  const s = PACE_X.slice(1).map((x, i) => (PACE_Y[i + 1] - PACE_Y[i]) / (x - PACE_X[i]));
+  return PACE_X.map((_, i) => i === 0 ? s[0] : i === PACE_X.length - 1 ? s[s.length - 1] : (s[i - 1] + s[i]) / 2);
+})();
+function pace(x) {
+  x = clamp(x);
+  let k = 0; while (k < PACE_X.length - 2 && x > PACE_X[k + 1]) k++;
+  const h = PACE_X[k + 1] - PACE_X[k], t = (x - PACE_X[k]) / h, t2 = t * t, t3 = t2 * t;
+  return clamp((2 * t3 - 3 * t2 + 1) * PACE_Y[k] + (t3 - 2 * t2 + t) * h * PACE_M[k] + (-2 * t3 + 3 * t2) * PACE_Y[k + 1] + (t3 - t2) * h * PACE_M[k + 1]);
+}
+function unpace(p) { let a = 0, b = 1; for (let i = 0; i < 30; i++) { const m = (a + b) / 2; if (pace(m) < p) a = m; else b = m; } return (a + b) / 2; }
+
 function beginRun() {
   if (!S.source || !S.lm) return;
-  S.p = 0; S.elapsed = 0; S.resisted = 0; S.react = 0; S.outcome = null; S.thumbs = []; S.lastThumb = -1; S.videoBlob = null;
-  S.phase = 'run'; S.playing = false; S.countdown = S.source === 'image' ? 0 : 3; S.calib = []; S.wireT = S.source === 'image' ? 0 : 1.4;
+  S.p = 0; S.tp = 0; S.elapsed = 0; S.resisted = 0; S.react = 0; S.outcome = null; S.thumbs = []; S.lastThumb = -1; S.videoBlob = null;
+  // com foto não há contagem; com câmera, 2 s (3 s no Resistir, que precisa medir o rosto neutro)
+  S.phase = 'run'; S.playing = false; S.countdown = S.source === 'image' ? 0 : params.mode === 'resistir' ? 3 : 2; S.calib = []; S.wireT = S.source === 'image' ? 0 : 1.4;
   if (!S.countdown) { S.playing = true; startRecording(); }
   showScreen();
 }
@@ -1757,15 +1798,16 @@ function updateRun(dt) {
     rate *= 1.3 - 2.3 * S.react;
     if (S.react > 0.35) S.resisted += dt;
   }
-  S.p = clamp(S.p + rate * dt);
+  S.tp = clamp((S.tp || 0) + rate * dt);
+  S.p = pace(S.tp);
   captureThumb();
   if (S.p >= 1) finish('done');
   else if (params.mode === 'resistir' && live && S.elapsed > params.duration * 2.2) finish('resistiu');
 }
 function finish(outcome) {
   S.playing = false; S.outcome = outcome; S.phase = 'done';
-  setTimeout(() => { if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }, 1800);
-  setTimeout(showScreen, 1900);
+  setTimeout(() => { if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }, 1500);
+  setTimeout(showScreen, 1600);
 }
 const BOARD_MARKS = [0, 0.14, 0.28, 0.42, 0.56, 0.70, 0.84, 1];
 function captureThumb() {
@@ -1792,7 +1834,13 @@ function startRecording() {
 }
 const videoName = () => `paquidermia-a-pele-engrossa.${S.videoMime.includes('mp4') ? 'mp4' : 'webm'}`;
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
-function saveImage() { out.toBlob(b => download(b, `paquidermia-${String(Math.round(S.p * 100)).padStart(3, '0')}.png`), 'image/png'); }
+function saveImage() {
+  return withHires(async () => {
+    renderAll(performance.now(), true);
+    const b = await new Promise(r => out.toBlob(r, 'image/png'));
+    download(b, `paquidermia-${String(Math.round(S.p * 100)).padStart(3, '0')}.png`);
+  });
+}
 
 function renderBoard() {
   const cw = 360, chh = Math.round(cw * out.height / out.width), pad = 24, head = 110, cap = 58;
@@ -1953,8 +2001,8 @@ function offerShare(file) {
   $('vShare').hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
 }
 async function vistaPoster() {
-  S.vT = Math.max(S.vT, 3); renderAll(performance.now(), true);
-  const b = await new Promise(r => out.toBlob(r, 'image/png'));
+  S.vT = Math.max(S.vT, 3);
+  const b = await withHires(async () => { renderAll(performance.now(), true); return new Promise(r => out.toBlob(r, 'image/png')); });
   const f = new File([b], `paquidermia-cartaz-${params.world}.png`, { type: 'image/png' });
   download(b, f.name); offerShare(f); vStat('CARTAZ SALVO.');
 }
@@ -1971,7 +2019,7 @@ async function vistaPack(n) {
     ? [{ world: 'palco', phrase: 'VOCÊ AINDA SENTE?' }, { world: keep.world, phrase: keep.phrase, custom: keep.custom }, { world: 'coro', phrase: 'A PELE ENGROSSA DEVAGAR.' }]
     : [{ world: 'palco', phrase: 'VOCÊ AINDA SENTE?' }, { world: 'coro', phrase: 'QUANDO TODOS MUDAM' }, { world: 'arquivo', phrase: 'CALAR' }, { world: 'termica', phrase: 'AINDA ARREPIA?' }, { world: 'feed', phrase: 'A PELE ENGROSSA DEVAGAR.' }];
   const fmt = n === 3 ? 'story' : 'feed';
-  if (params.format !== fmt) { params.format = fmt; resizeTargets(); }
+  params.format = fmt; S.hires = true; resizeTargets();
   S.vT = 10; const items = [];
   for (let i = 0; i < vars.length; i++) {
     Object.assign(params, { world: vars[i].world, phrase: vars[i].phrase, custom: vars[i].custom || '' });
@@ -1981,17 +2029,31 @@ async function vistaPack(n) {
     vStat(`IMAGEM ${i + 1} / ${n}…`);
   }
   Object.assign(params, { world: keep.world, phrase: keep.phrase, custom: keep.custom });
-  if (params.format !== keep.format) { params.format = keep.format; resizeTargets(); }
+  params.format = keep.format; S.hires = false; resizeTargets();
   S.vT = keep.vT; textLayerDirty = true; syncVista();
-  download(makeZip(items), `paquidermia-${n === 3 ? 'stories' : 'carrossel'}-${n}.zip`);
-  vStat(`PACOTE COM ${n} IMAGENS SALVO.`);
+  showGallery(items, n === 3 ? '3 STORIES · 9:16' : '5 CARDS · 4:5', `paquidermia-${n === 3 ? 'stories' : 'carrossel'}-${n}.zip`);
+  vStat(`${n} IMAGENS PRONTAS.`);
+}
+// as imagens soltas, não um ZIP: no celular vão direto para a galeria pelo menu de compartilhar
+function showGallery(items, title, zipName) {
+  (S.galUrls || []).forEach(u => URL.revokeObjectURL(u));
+  const files = items.map(it => new File([it.bytes], it.name, { type: 'image/png' }));
+  S.galFiles = files; S.galUrls = files.map(f => URL.createObjectURL(f));
+  $('vgTitle').textContent = title;
+  $('vgGrid').innerHTML = files.map((f, i) => `<figure><img src="${S.galUrls[i]}" alt="${f.name}"><a href="${S.galUrls[i]}" download="${f.name}">↓ ${String(i + 1).padStart(2, '0')}</a></figure>`).join('');
+  const zipUrl = URL.createObjectURL(makeZip(items)); S.galUrls.push(zipUrl);
+  $('vgZip').href = zipUrl; $('vgZip').download = zipName;
+  const canShare = !!(navigator.canShare && navigator.canShare({ files }));
+  $('vgShare').hidden = !canShare;
+  $('vgTip').hidden = !isMobile;
+  $('vgal').classList.add('show');
 }
 function syncVista() {
   document.querySelectorAll('#vWorlds [data-world]').forEach(b => b.classList.toggle('on', b.dataset.world === params.world));
   $('vPhrase').value = params.phrase; $('vCustom').value = params.custom || '';
 }
 const INTRO = {
-  pele: { idx: 'PAQ. / LAB 01', title: 'A pele<br>engrossa', lede: 'Quanto tempo demora até a <em>sua</em> pele engrossar?', how: ['Rosto de frente, com luz no rosto.', 'Quarenta segundos de feed. Só olhe.', 'No modo Resistir, cada reação sua faz a pele recuar.'] },
+  pele: { idx: 'PAQ. / LAB 01', title: 'A pele<br>engrossa', lede: 'Quanto tempo demora até a <em>sua</em> pele engrossar?', how: ['Rosto de frente, com luz no rosto.', 'Quinze segundos de feed. Só olhe.', 'No modo Resistir, cada reação sua faz a pele recuar.'] },
   vista: { idx: 'PAQ. / LAB 02', title: 'Vista sua<br>paquidermia', lede: 'Um rosto diante da <em>manada</em>.', how: ['A máscara da peça encaixa sozinha no seu rosto, ao vivo ou na foto.', 'Escolha o mundo, a frase e o que você faz quando tudo muda.', 'Salve o cartaz, o vídeo ou o carrossel para postar.'] },
 };
 function setExp(exp) {
@@ -2025,7 +2087,8 @@ function renderAll(now, silent) {
   }
 }
 function loop(now) {
-  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  // até 0,5 s por quadro: em aparelho lento a metamorfose pula quadros mas não dura mais do que o combinado
+  const dt = Math.min(0.5, (now - lastT) / 1000); lastT = now;
   fpsAcc += dt; fpsN++; if (fpsAcc > 1) { S.fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; status(); }
   try {
     if (S.source === 'camera' || S.source === 'video') processLive(now);
@@ -2122,7 +2185,7 @@ function wireUI() {
     if (!S.source) return;
     if (S.phase === 'ready' || S.phase === 'done') { beginRun(); return; }
     if (S.p >= 1) S.p = 0;
-    S.playing = !S.playing;
+    S.tp = unpace(S.p); S.playing = !S.playing;
   };
   $('pReset').onclick = () => { stopRun(); S.p = 0; if (S.source) { S.phase = 'ready'; showScreen(); } };
   $('pRec').onclick = () => { if (S.rec && S.rec.state === 'recording') S.rec.stop(); else startRecording(); };
@@ -2143,6 +2206,9 @@ function wireUI() {
   $('vPack5').onclick = () => vistaPack(5).catch(e => vStat('ERRO: ' + e.message));
   $('vShare').onclick = async () => { try { await navigator.share({ files: [S.lastFile], title: 'Paquidermia', text: 'Vista sua paquidermia. #Paquidermia' }); } catch (e) { console.warn(e); } };
   $('vBack').onclick = () => { stopRun(); stopSources(); S.source = null; S.phase = 'intro'; showScreen(); };
+  $('vgClose').onclick = () => $('vgal').classList.remove('show');
+  $('vgShare').onclick = async () => { try { await navigator.share({ files: S.galFiles, title: 'Paquidermia', text: 'Vista sua paquidermia. #Paquidermia' }); } catch (e) { console.warn(e); } };
+  $('vgAll').onclick = async () => { for (const f of S.galFiles || []) { download(f, f.name); await new Promise(r => setTimeout(r, 400)); } };
   $('vHide').onclick = () => { S.vHidden = true; showScreen(); };
   $('vShow').onclick = () => { S.vHidden = false; showScreen(); };
   $('pMask').innerHTML = Object.entries(MASKS).map(([k, m]) => `<option value="${k}">${m.nome}</option>`).join('');
