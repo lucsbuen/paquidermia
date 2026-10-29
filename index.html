@@ -17,7 +17,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23D62A1E'/%3E%3Ctext x='32' y='47' font-family='Impact,Arial Narrow,sans-serif' font-size='40' text-anchor='middle' fill='%23EFE9DC'%3EP.%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IM+Fell+English:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#050605; --ink:#EFE9DC; --dim:#a9a69d; --line:#2b2f2b; --red:#D62A1E; --green:#79B36E;
@@ -76,6 +76,20 @@ h1{font:400 clamp(54px,9.6vh,104px)/.94 var(--cond);margin:3.5vh 0 0;letter-spac
 #result .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #result .grid .wide{grid-column:1/-1}
 
+.exps{display:flex;gap:0;margin:0 0 16px;border-bottom:1px solid #2a2e2a}
+.exps button{flex:1;background:transparent;border:0;border-bottom:2px solid transparent;padding:10px 4px;font-size:10.5px;letter-spacing:.14em;font-weight:700;color:#8f8c84}
+.exps button.on{color:var(--ink);border-bottom-color:var(--red)}
+#vbar{position:absolute;left:0;right:0;bottom:0;display:none;flex-direction:column;gap:7px;padding:44px 4.5% 4%;z-index:4;background:linear-gradient(180deg,rgba(4,5,4,0),rgba(4,5,4,.86) 26%,rgba(4,5,4,.95))}
+#vbar.show{display:flex}
+#vbar .vq{font-size:10.5px;letter-spacing:.22em;color:#cfcac0}
+#vbar .vrow{display:flex;gap:6px}
+#vbar .vrow > button:not(.btn){flex:1;background:rgba(5,6,5,.6);border:1px solid #5c5a55;padding:9px 4px;font-size:10.5px;letter-spacing:.12em;font-weight:700}
+#vbar .vrow > button.on{background:var(--ink);color:#111;border-color:var(--ink)}
+#vbar .vrow .btn{flex:1;padding:11px 6px;font-size:10.5px;letter-spacing:.1em}
+#vbar .vrow .btn.ico{flex:0 0 44px}
+#vbar select,#vbar input{flex:1;min-width:0;background:#0d100d;border:1px solid #5c5a55;padding:9px 8px;font-size:12px}
+#vbar .vstat{min-height:14px;font-size:10.5px;letter-spacing:.12em;color:var(--green)}
+#vShow{position:absolute;right:4%;bottom:3.5%;z-index:4;display:none;padding:10px 14px;font-size:10.5px;background:rgba(5,6,5,.7)}
 #panel{display:none;width:330px;max-height:calc(100dvh - 24px);overflow:auto;border:1px solid var(--line);background:#080a08;padding:16px 16px 22px;font-size:12px}
 body.diretor #panel{display:block}
 #panel h3{font:700 10.5px var(--mono);letter-spacing:.24em;margin:18px 0 8px;color:var(--dim);text-transform:uppercase}
@@ -109,11 +123,12 @@ body.diretor #panel{display:block}
     <canvas id="out" width="1080" height="1920"></canvas>
 
     <section id="intro" class="overlay show">
+      <div class="exps" id="expSel"><button data-exp="pele" class="on">01 · A PELE ENGROSSA</button><button data-exp="vista">02 · VISTA A MÁSCARA</button></div>
       <div class="bar"><i style="width:7%"></i></div>
-      <div class="idx">PAQ. / LAB 01</div>
-      <h1>A pele<br>engrossa</h1>
-      <p class="lede">Quanto tempo demora até a <em>sua</em> pele engrossar?</p>
-      <ol class="how">
+      <div class="idx" id="introIdx">PAQ. / LAB 01</div>
+      <h1 id="introTitle">A pele<br>engrossa</h1>
+      <p class="lede" id="introLede">Quanto tempo demora até a <em>sua</em> pele engrossar?</p>
+      <ol class="how" id="introHow">
         <li>Rosto de frente, com luz no rosto.</li>
         <li>Quarenta segundos de feed. Só olhe.</li>
         <li>No modo Resistir, cada reação sua faz a pele recuar.</li>
@@ -145,6 +160,17 @@ body.diretor #panel{display:block}
       <button class="btn ico" id="btnPause" title="Pausar">❚❚</button>
       <button class="btn ico" id="panelToggle" title="Ajustes">⚙</button>
     </div>
+
+    <section id="vbar">
+      <div class="vq">O QUE VOCÊ FAZ QUANDO TUDO MUDA?</div>
+      <div class="vrow" id="vActs"><button data-act="resistir">RESISTIR</button><button data-act="calar">CALAR</button><button data-act="seguir">SEGUIR</button></div>
+      <div class="vrow vworlds" id="vWorlds"><button data-world="palco" class="on">PALCO</button><button data-world="coro">CORO</button><button data-world="arquivo">ARQUIVO</button><button data-world="termica">TÉRMICA</button><button data-world="feed">FEED</button></div>
+      <div class="vrow"><select id="vPhrase"></select><input id="vCustom" maxlength="60" placeholder="ou escreva a sua frase" autocomplete="off"></div>
+      <div class="vrow vout"><button id="vPng" class="btn red">↓ Cartaz</button><button id="vVid" class="btn">● Vídeo</button><button id="vPack3" class="btn">↓ 3 stories</button><button id="vPack5" class="btn">↓ 5 cards</button></div>
+      <div class="vrow"><button id="vBack" class="btn ico" title="Voltar">✕</button><button id="vShare" class="btn" hidden>Compartilhar</button><button id="vHide" class="btn">Ver o cartaz limpo</button></div>
+      <div class="vstat" id="vStat"></div>
+    </section>
+    <button id="vShow" class="btn">Controles</button>
 
     <section id="result" class="overlay">
       <div class="r-top">
@@ -251,8 +277,9 @@ const params = {
   duration: 40, mode: 'assistir', format: 'story',
   look: 1, relief: 1, gloss: 1, deform: 1, hornScale: 1, maskScale: 1, maskLift: 0,
   grain: 0.055, hud: true, keepBg: false, mirror: true,
+  exp: qs.get('exp') === 'vista' ? 'vista' : 'pele', world: 'palco', phrase: 'VOCÊ RESISTIRIA?', custom: '',
 };
-const FRAMING = { story: { faceFrac: 0.29, faceY: 0.53 }, feed: { faceFrac: 0.37, faceY: 0.56 } };
+const FRAMING = { story: { faceFrac: 0.29, faceY: 0.53 }, feed: { faceFrac: 0.37, faceY: 0.55 } };
 
 // ---------- utilidades ----------
 const $ = id => document.getElementById(id);
@@ -397,7 +424,7 @@ const FS_BG = `#version 300 es
 precision highp float;
 in vec2 vUV; out vec4 o;
 uniform sampler2D uVideo, uSeg;
-uniform vec4 uCrop; uniform float uMirror, uSegOK, uSegInvert, uKeepBg; uniform vec3 uRimCol;
+uniform vec4 uCrop; uniform float uMirror, uSegOK, uSegInvert, uKeepBg, uSubjectOnly; uniform vec3 uRimCol;
 ${G_COMMON}
 ${G_GRADE}
 vec2 toImg(vec2 c){ if (uMirror > 0.5) c.x = 1.0 - c.x; return uCrop.xy + c*uCrop.zw; }
@@ -425,6 +452,105 @@ void main(){
   vec2 d = vUV - uFaceC; d.x *= uAspect;
   float near = exp(-dot(d, d) / max(uFaceH*uFaceH*2.2, 1e-4));
   col += uRimCol * rim * 0.65 * near * uLook;
+  if (uSubjectOnly > 0.5) { o = vec4((subj + uRimCol*rim*0.65*near*uLook)*per, per); return; }
+  o = vec4(col, 1.0);
+}`;
+
+// os cinco mundos do Vista: recompõem a camada pessoa+máscara (premultiplicada)
+const FS_WORLD = `#version 300 es
+precision highp float;
+in vec2 vUV; out vec4 o;
+uniform sampler2D uSubj, uText, uCov; uniform int uWorld; uniform float uTime, uAspect, uFaceH; uniform vec2 uFaceC, uRes; uniform vec4 uOval;
+${G_COMMON}
+vec4 sub(vec2 uv, float lod){
+  if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return vec4(0.0);
+  return textureLod(uSubj, vec2(uv.x, 1.0 - uv.y), lod);
+}
+vec4 txt(vec2 uv){ return texture(uText, uv); }
+vec3 over(vec3 dst, vec4 src){ return dst*(1.0 - src.a) + src.rgb; }
+vec3 thermal(float t){
+  t = clamp(t, 0.0, 1.0)*6.0;
+  vec3 c0 = vec3(0.03,0.01,0.12), c1 = vec3(0.19,0.02,0.32), c2 = vec3(0.51,0.07,0.51), c3 = vec3(0.87,0.18,0.38), c4 = vec3(1.0,0.44,0.13), c5 = vec3(1.0,0.82,0.21), c6 = vec3(0.98,0.98,0.82);
+  if (t < 1.0) return mix(c0, c1, t); if (t < 2.0) return mix(c1, c2, t - 1.0); if (t < 3.0) return mix(c2, c3, t - 2.0);
+  if (t < 4.0) return mix(c3, c4, t - 3.0); if (t < 5.0) return mix(c4, c5, t - 4.0); return mix(c5, c6, t - 5.0);
+}
+void main(){
+  vec2 uv = vUV;
+  vec4 s = sub(uv, 0.0);
+  vec2 d = uv - uFaceC; d.x *= uAspect;
+  vec3 col;
+  if (uWorld == 0) {
+    // PALCO: escuro, luz quente pela esquerda, azul pela direita, fumaça
+    vec3 bg = vec3(0.010, 0.011, 0.012);
+    vec2 a = d - vec2(-0.42, 0.06), b = d - vec2(0.46, -0.10);
+    bg += vec3(0.85, 0.42, 0.16)*0.10*exp(-dot(a, a)*5.0) + vec3(0.25, 0.30, 0.95)*0.12*exp(-dot(b, b)*4.0);
+    bg += vec3(0.05, 0.04, 0.07)*exp(-dot(d, d)/max(uFaceH*uFaceH*3.0, 1e-4));
+    bg += vec3(0.035, 0.035, 0.045)*smoothstep(0.45, 0.8, fbm(uv*vec2(3.0, 5.0) + vec2(uTime*0.03, -uTime*0.02)));
+    col = over(bg, s);
+  } else if (uWorld == 1) {
+    // CORO: a manada de cópias atrás, mais escura e desfocada quanto mais longe
+    vec3 bg = vec3(0.016, 0.030, 0.020);
+    col = over(bg, txt(uv)*0.9);
+    for (int i = 0; i < 7; i++) {
+      float fx = float(i) - 3.0, sc = 0.30;
+      vec2 c0 = vec2(0.5 + fx*0.165, uFaceC.y - 0.13);
+      vec4 e = sub(uFaceC + (uv - c0)/sc + vec2(sin(uTime*0.6 + fx)*0.004, 0.0), 2.8);
+      col = col*(1.0 - e.a*0.88) + vec3(luma(e.rgb))*vec3(0.70, 0.86, 0.74)*0.42;
+    }
+    for (int i = 0; i < 6; i++) {
+      float fx = float(i) - 2.5, sc = 0.42;
+      vec2 c0 = vec2(0.5 + fx*0.215, uFaceC.y - 0.07);
+      vec4 e = sub(uFaceC + (uv - c0)/sc + vec2(0.0, sin(uTime*0.5 + fx*1.3)*0.003), 2.2);
+      col = col*(1.0 - e.a*0.9) + vec3(luma(e.rgb))*vec3(0.72, 0.87, 0.76)*0.55;
+    }
+    for (int i = 0; i < 4; i++) {
+      float fx = float(i) - 1.5, sc = 0.60;
+      vec2 c0 = vec2(0.5 + fx*0.36, uFaceC.y - 0.01);
+      vec4 e = sub(uFaceC + (uv - c0)/sc + vec2(0.0, sin(uTime*0.45 + fx*1.7)*0.003), 1.5);
+      col = col*(1.0 - e.a*0.92) + vec3(luma(e.rgb))*vec3(0.74, 0.88, 0.78)*0.70;
+    }
+    col = over(col, s);
+  } else if (uWorld == 2) {
+    // ARQUIVO: prancha zoológica, gravura numa oval sobre papel envelhecido
+    float n = fbm(uv*vec2(7.0, 9.0) + 3.0), n2 = fbm(uv*31.0 + 7.0);
+    vec3 paper = mix(vec3(0.74, 0.66, 0.52), vec3(0.95, 0.91, 0.82), smoothstep(0.0, 0.9, 1.0 - length((uv - vec2(0.5, 0.48))*vec2(1.0, 0.8))*1.15));
+    paper *= 0.94 + 0.08*n; paper -= vec3(0.05, 0.07, 0.09)*smoothstep(0.55, 0.85, n2)*0.45;
+    col = paper;
+    vec2 oc = uOval.xy, r = uOval.zw;
+    float ov = length((uv - oc)/r);
+    if (ov < 1.0) {
+      vec3 sc = over(vec3(0.15, 0.11, 0.08), s);
+      float l = pow(clamp((luma(sc) - 0.03)*2.3, 0.0, 1.0), 0.85);
+      float lines = 0.5 + 0.5*sin(uv.y*uRes.y*1.25 + fbm(uv*30.0)*2.5);
+      // tom escuro = mais tinta: a linha engrossa onde a imagem escurece
+      float ink = smoothstep(l - 0.2, l + 0.2, lines);
+      col = mix(vec3(0.88, 0.80, 0.64), vec3(0.16, 0.11, 0.08), ink);
+      col = mix(col, sc*vec3(1.05, 0.90, 0.70), 0.22);
+    }
+    col = mix(col, vec3(0.26, 0.20, 0.14), (1.0 - smoothstep(0.0, 0.010, abs(ov - 1.0)))*0.9);
+    col = mix(col, vec3(0.26, 0.20, 0.14), (1.0 - smoothstep(0.0, 0.005, abs(ov - 1.04)))*0.7);
+  } else if (uWorld == 3) {
+    // TERMOGRAFIA: o que é pele esquenta, a máscara esfria, e o olho no furo continua quente
+    vec4 b = sub(uv, 3.0);
+    float cov = textureLod(uCov, vec2(uv.x, 1.0 - uv.y), 1.5).a;
+    float lum = luma(b.rgb/max(b.a, 1e-3));
+    float t = mix(0.64 + lum*0.5, 0.10 + lum*0.26, cov)*smoothstep(0.02, 0.6, b.a);
+    vec3 th = thermal(t);
+    col = mix(vec3(0.035, 0.0, 0.10), th, smoothstep(0.0, 0.35, b.a));
+    col += vec3(0.08, 0.0, 0.12)*exp(-dot(d, d)/max(uFaceH*uFaceH*4.0, 1e-4));
+  } else {
+    // FEED: ruído, palavras correndo atrás e linhas vermelhas de rolagem
+    vec3 bg = vec3(0.012, 0.012, 0.014);
+    vec2 tu = uv + vec2(fract(uTime*0.025), 0.0);
+    bg = over(bg, txt(fract(tu))*0.85);
+    vec3 sc = over(bg, s);
+    float l = luma(sc);
+    col = mix(vec3(l), sc, 0.45)*0.9;
+    for (int k = 0; k < 9; k++) {
+      float y = fract(0.21 + float(k)*0.083 + uTime*(mod(float(k), 2.0) < 1.0 ? 0.012 : -0.008));
+      col = mix(col, vec3(0.81, 0.27, 0.20), (1.0 - smoothstep(0.0, 0.0018, abs(uv.y - y)))*0.38);
+    }
+  }
   o = vec4(col, 1.0);
 }`;
 
@@ -644,6 +770,8 @@ void main(){
   float front = smoothstep(q - 0.12, q, R) * (1.0 - smoothstep(q, q + 0.08, R));
   c += vec3(0.50, 0.40, 1.0)*front*0.22;
   float A = a*rv;
+  // modo cobertura: só onde há máscara (para a termografia saber o que é frio)
+  if (uShadow > 1.5) { o = vec4(A); return; }
   // a máscara fica por cima; o olho aparece só onde ela é furada
   vec4 e0 = socket(uHole0, uEye0), e1 = socket(uHole1, uEye1);
   vec4 e = e0.a > e1.a ? e0 : e1;
@@ -709,6 +837,7 @@ function initGL() {
   P.horn = program(VS_HORN, FS_HORN);
   P.mask = program(VS_MASK, FS_MASK);
   P.post = program(VS_QUAD, FS_POST);
+  P.world = program(VS_QUAD, FS_WORLD);
 
   // quad de tela cheia
   B.quadVAO = gl.createVertexArray(); gl.bindVertexArray(B.quadVAO);
@@ -834,7 +963,14 @@ function resizeTargets() {
   const [W, H] = outSize();
   out.width = W; out.height = H; glCanvas.width = W; glCanvas.height = H;
   $('stage').classList.toggle('feed', params.format === 'feed');
-  if (FB.scene) { gl.deleteFramebuffer(FB.scene); gl.deleteTexture(T.scene); gl.deleteRenderbuffer(FB.depth); }
+  if (FB.scene) { gl.deleteFramebuffer(FB.scene); gl.deleteTexture(T.scene); gl.deleteRenderbuffer(FB.depth); gl.deleteFramebuffer(FB.subj); gl.deleteTexture(T.subj); gl.deleteFramebuffer(FB.cov); gl.deleteTexture(T.cov); }
+  T.subj = makeTex(W, H, { mip: true }); gl.generateMipmap(gl.TEXTURE_2D);
+  FB.subj = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, FB.subj);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, T.subj, 0);
+  T.cov = makeTex(W, H, { mip: true }); gl.generateMipmap(gl.TEXTURE_2D);
+  FB.cov = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, FB.cov);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, T.cov, 0);
+  textLayerDirty = true;
   T.scene = makeTex(W, H);
   FB.depth = gl.createRenderbuffer(); gl.bindRenderbuffer(gl.RENDERBUFFER, FB.depth);
   gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, W, H);
@@ -914,8 +1050,12 @@ function targetCrop() {
   const fh = Math.hypot(L[30] - L[456], L[31] - L[457]);
   let s = clamp((H * F.faceFrac) / Math.max(fh, 1), cover, cover * 5);
   // no fim a câmera recua: a máscara inteira (chifre e orelhas) precisa caber no quadro
-  const pull = smooth(0.80, 0.92, S.p);
-  if (pull > 0) { const sFit = Math.max(Math.min(s, (H * 0.34) / Math.max(fh, 1)), cover * 0.7); s = Math.exp(lerp(Math.log(s), Math.log(sFit), pull)); }
+  const pull = params.exp === 'vista' ? 1 : smooth(0.80, 0.92, S.p);
+  if (pull > 0) {
+    const fitK = params.format === 'feed' ? 0.29 : 0.34;
+    const sFit = Math.max(Math.min(s, (H * fitK) / Math.max(fh, 1)), cover * 0.6);
+    s = Math.exp(lerp(Math.log(s), Math.log(sFit), pull));
+  }
   const cw = W / s, ch = H / s;
   let x0 = fx - cw * 0.5, y0 = fy - ch * F.faceY;
   x0 = cw > iw ? (iw - cw) / 2 : clamp(x0, 0, iw - cw);
@@ -1081,32 +1221,124 @@ function maskTransformSimilar(fr) {
 const KEY_DIR = [-0.35, 0.75, 0.55], KEY_COL = [1.0, 0.86, 0.68], RIM_DIR = [0.95, 0.1, -0.1], RIM_COL = [0.42, 0.40, 1.0];
 let lastRender = { fr: null, mt: null };
 
-function renderScene(now) {
+function frameGeometry(p, deform) {
   const W = out.width, H = out.height;
-  const p = S.p;
   let fr = null, mt = null;
   if (S.lm && S.iw) {
     projectLandmarks();
-    if (S.hasFace) { fr = buildFace(p); mt = maskTransform(fr); }
+    if (S.hasFace) { fr = deform ? buildFace(p) : faceFrame(); mt = maskTransform(fr); }
   }
   const faceC = fr ? { x: fr.C.x / W, y: fr.C.y / H } : { x: 0.5, y: 0.45 }, faceH = fr ? fr.fh / H : 0.3;
   if (S.segDirty) uploadSeg();
-
-  gl.bindFramebuffer(gl.FRAMEBUFFER, FB.scene);
-  gl.viewport(0, 0, W, H);
-  gl.clearColor(0, 0, 0, 1); gl.clearDepth(1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
-
-  const { x0, y0, s } = S.crop;
-  const setGrade = pr => { gl.uniform2f(pr.u.uFaceC, faceC.x, faceC.y); gl.uniform1f(pr.u.uFaceH, faceH); gl.uniform1f(pr.u.uAspect, W / H); gl.uniform1f(pr.u.uLook, params.look); gl.uniform1f(pr.u.uExposure, S.exposure); };
-
+  return { fr, mt, faceC, faceH };
+}
+function setGrade(pr, g) {
+  gl.uniform2f(pr.u.uFaceC, g.faceC.x, g.faceC.y); gl.uniform1f(pr.u.uFaceH, g.faceH); gl.uniform1f(pr.u.uAspect, out.width / out.height);
+  gl.uniform1f(pr.u.uLook, params.look); gl.uniform1f(pr.u.uExposure, S.exposure);
+}
+// fundo de palco + pessoa; com subjectOnly sai só a pessoa, com transparência, para os mundos do Vista
+function drawBgPass(g, subjectOnly) {
+  const W = out.width, H = out.height, { x0, y0, s } = S.crop;
   gl.useProgram(P.bg.p);
   bindTex(0, T.video, P.bg, 'uVideo'); bindTex(1, T.seg, P.bg, 'uSeg');
   gl.uniform4f(P.bg.u.uCrop, x0 / S.iw, y0 / S.ih, (W / s) / S.iw, (H / s) / S.ih);
   gl.uniform1f(P.bg.u.uMirror, params.mirror ? 1 : 0);
   gl.uniform1f(P.bg.u.uSegOK, S.segOK ? 1 : 0); gl.uniform1f(P.bg.u.uSegInvert, S.segInvert ? 1 : 0);
   gl.uniform1f(P.bg.u.uKeepBg, params.keepBg ? 1 : 0); gl.uniform3fv(P.bg.u.uRimCol, RIM_COL);
-  setGrade(P.bg); drawQuad();
+  gl.uniform1f(P.bg.u.uSubjectOnly, subjectOnly ? 1 : 0);
+  setGrade(P.bg, g); drawQuad();
+}
+function drawMaskPass(mt, reveal, coverage) {
+  const W = out.width, H = out.height, { x0, y0, s } = S.crop;
+  for (let j = 0, k = 0; j < MGY; j++) for (let i = 0; i < MGX; i++, k += 2) {
+    const q = mt.f(i / (MGX - 1) * MASK.w, j / (MGY - 1) * MASK.h); B.maskPos[k] = q.x; B.maskPos[k + 1] = q.y;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, B.maskPosVBO); gl.bufferSubData(gl.ARRAY_BUFFER, 0, B.maskPos);
+  gl.useProgram(P.mask.p);
+  bindTex(0, T.mask, P.mask, 'uMask'); bindTex(1, T.bake1, P.mask, 'uBake1'); bindTex(2, T.video, P.mask, 'uVideo');
+  gl.uniform2f(P.mask.u.uRes, W, H); gl.uniform1f(P.mask.u.uReveal, reveal); gl.uniform1f(P.mask.u.uLook, params.look);
+  gl.uniform1f(P.mask.u.uTint, MASK.tint || 0);
+  // olhos da pessoa para as órbitas: o da esquerda da tela vai no furo da esquerda
+  const holes = MASK.holes || [];
+  const eyeC = (a, b) => { const A = pt(a), Bp = pt(b), hw = Math.hypot(Bp.x - A.x, Bp.y - A.y) * 0.5 * 1.35; return [(A.x + Bp.x) / 2, (A.y + Bp.y) / 2, hw, hw * 0.62]; };
+  let eL = eyeC(33, 133), eR = eyeC(263, 362);
+  if (eL[0] > eR[0]) [eL, eR] = [eR, eL];
+  const hole = h => h ? [h[0] / MASK.w, h[1] / MASK.h, h[2] / MASK.w, h[3] / MASK.h] : [0, 0, 0, 0];
+  gl.uniform4fv(P.mask.u.uHole0, hole(holes[0])); gl.uniform4fv(P.mask.u.uHole1, hole(holes[1]));
+  gl.uniform4fv(P.mask.u.uEye0, eL); gl.uniform4fv(P.mask.u.uEye1, eR);
+  const ang = Math.atan2(eR[1] - eL[1], eR[0] - eL[0]);
+  gl.uniform2f(P.mask.u.uRoll, Math.cos(ang), Math.sin(ang));
+  gl.uniform4f(P.mask.u.uInv, x0, y0, 1 / s, W); gl.uniform2f(P.mask.u.uImg, S.iw, S.ih);
+  gl.uniform1f(P.mask.u.uMirror, params.mirror ? 1 : 0); gl.uniform1f(P.mask.u.uExposure, S.exposure);
+  gl.uniform1f(P.mask.u.uEyeShow, holes.length ? 1 : 0);
+  gl.uniform2f(P.mask.u.uHT, MASK.hornTip[0] / MASK.w, MASK.hornTip[1] / MASK.h);
+  gl.uniform2f(P.mask.u.uHB, MASK.hornBase[0] / MASK.w, MASK.hornBase[1] / MASK.h);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.bindVertexArray(B.maskVAO);
+  if (coverage) { gl.uniform1f(P.mask.u.uShadow, 2); gl.drawElements(gl.TRIANGLES, B.maskN, gl.UNSIGNED_SHORT, 0); }
+  else {
+    gl.uniform1f(P.mask.u.uShadow, 1); gl.drawElements(gl.TRIANGLES, B.maskN, gl.UNSIGNED_SHORT, 0);
+    gl.uniform1f(P.mask.u.uShadow, 0); gl.drawElements(gl.TRIANGLES, B.maskN, gl.UNSIGNED_SHORT, 0);
+  }
+  gl.disable(gl.BLEND);
+}
+function drawPost(now) {
+  const W = out.width, H = out.height;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, H);
+  gl.useProgram(P.post.p);
+  bindTex(0, T.scene, P.post, 'uScene');
+  gl.uniform1f(P.post.u.uTime, now / 1000); gl.uniform1f(P.post.u.uGrain, params.grain); gl.uniform1f(P.post.u.uVig, 0.55 * params.look + 0.15);
+  drawQuad();
+  gl.bindVertexArray(null);
+}
+
+// Vista: pessoa + máscara numa camada transparente; depois o mundo recompõe essa camada
+const WORLD_ID = { palco: 0, coro: 1, arquivo: 2, termica: 3, feed: 4 };
+function renderVista(now) {
+  const W = out.width, H = out.height;
+  const g = frameGeometry(0, false);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, FB.subj);
+  gl.viewport(0, 0, W, H);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+  drawBgPass(g, true);
+  const reveal = vistaReveal();
+  if (g.mt && T.mask && reveal > 0.001) drawMaskPass(g.mt, reveal);
+  gl.bindTexture(gl.TEXTURE_2D, T.subj); gl.generateMipmap(gl.TEXTURE_2D);
+  if (params.world === 'termica') {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, FB.cov);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    if (g.mt && T.mask && reveal > 0.001) drawMaskPass(g.mt, reveal, true);
+    gl.bindTexture(gl.TEXTURE_2D, T.cov); gl.generateMipmap(gl.TEXTURE_2D);
+  }
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, FB.scene);
+  gl.viewport(0, 0, W, H);
+  gl.useProgram(P.world.p);
+  bindTex(0, T.subj, P.world, 'uSubj'); bindTex(1, T.text, P.world, 'uText'); bindTex(2, T.cov, P.world, 'uCov');
+  gl.uniform1i(P.world.u.uWorld, WORLD_ID[params.world] || 0);
+  gl.uniform1f(P.world.u.uTime, now / 1000); gl.uniform1f(P.world.u.uAspect, W / H);
+  gl.uniform2f(P.world.u.uFaceC, g.faceC.x, g.faceC.y); gl.uniform1f(P.world.u.uFaceH, g.faceH);
+  gl.uniform2f(P.world.u.uRes, W, H);
+  // oval da prancha: retrato em pé nos dois formatos, legenda cabendo embaixo
+  S.oval = params.format === 'feed' ? [0.5, g.faceC.y - 0.02, 0.30, 0.27] : [0.5, g.faceC.y - 0.01, 0.37, 0.254];
+  gl.uniform4fv(P.world.u.uOval, S.oval);
+  drawQuad();
+  drawPost(now);
+  lastRender = { fr: g.fr, mt: g.mt };
+}
+
+function renderScene(now) {
+  const W = out.width, H = out.height;
+  const p = S.p;
+  const g = frameGeometry(p, true), { fr, mt } = g;
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, FB.scene);
+  gl.viewport(0, 0, W, H);
+  gl.clearColor(0, 0, 0, 1); gl.clearDepth(1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+  drawBgPass(g, false);
 
   let hornGrow = 0, horn = null;
   if (fr) {
@@ -1129,7 +1361,7 @@ function renderScene(now) {
     gl.uniform2f(P.face.u.uHornBase, hb.x, hb.y); gl.uniform1f(P.face.u.uHornW, halfW); gl.uniform1f(P.face.u.uHornGrow, smooth(0.5, 0.7, p));
     gl.uniform3fv(P.face.u.uSkin, S.skin || [0.6, 0.45, 0.38]);
     gl.uniform3fv(P.face.u.uEndCol, MASK.endCol || [0.14, 0.18, 0.19]);
-    setGrade(P.face);
+    setGrade(P.face, g);
     gl.bindVertexArray(B.faceVAO); gl.drawElements(gl.TRIANGLES, TRIX.length, gl.UNSIGNED_SHORT, 0);
     gl.disable(gl.DEPTH_TEST);
 
@@ -1148,46 +1380,10 @@ function renderScene(now) {
     }
 
     const reveal = smooth(0.86, 0.995, p);
-    if (reveal > 0.001 && T.mask) {
-      for (let j = 0, k = 0; j < MGY; j++) for (let i = 0; i < MGX; i++, k += 2) {
-        const q = mt.f(i / (MGX - 1) * MASK.w, j / (MGY - 1) * MASK.h); B.maskPos[k] = q.x; B.maskPos[k + 1] = q.y;
-      }
-      gl.bindBuffer(gl.ARRAY_BUFFER, B.maskPosVBO); gl.bufferSubData(gl.ARRAY_BUFFER, 0, B.maskPos);
-      gl.useProgram(P.mask.p);
-      bindTex(0, T.mask, P.mask, 'uMask'); bindTex(1, T.bake1, P.mask, 'uBake1');
-      gl.uniform2f(P.mask.u.uRes, W, H); gl.uniform1f(P.mask.u.uReveal, reveal); gl.uniform1f(P.mask.u.uLook, params.look);
-      gl.uniform1f(P.mask.u.uTint, MASK.tint || 0);
-      // olhos da pessoa para as órbitas: o da esquerda da tela vai no furo da esquerda
-      const holes = MASK.holes || [];
-      const eyeC = (a, b) => { const A = pt(a), Bp = pt(b), hw = Math.hypot(Bp.x - A.x, Bp.y - A.y) * 0.5 * 1.35; return [(A.x + Bp.x) / 2, (A.y + Bp.y) / 2, hw, hw * 0.62]; };
-      let eL = eyeC(33, 133), eR = eyeC(263, 362);
-      if (eL[0] > eR[0]) [eL, eR] = [eR, eL];
-      const hole = h => h ? [h[0] / MASK.w, h[1] / MASK.h, h[2] / MASK.w, h[3] / MASK.h] : [0, 0, 0, 0];
-      gl.uniform4fv(P.mask.u.uHole0, hole(holes[0])); gl.uniform4fv(P.mask.u.uHole1, hole(holes[1]));
-      gl.uniform4fv(P.mask.u.uEye0, eL); gl.uniform4fv(P.mask.u.uEye1, eR);
-      const ang = Math.atan2(eR[1] - eL[1], eR[0] - eL[0]);
-      gl.uniform2f(P.mask.u.uRoll, Math.cos(ang), Math.sin(ang));
-      gl.uniform4f(P.mask.u.uInv, x0, y0, 1 / s, W); gl.uniform2f(P.mask.u.uImg, S.iw, S.ih);
-      gl.uniform1f(P.mask.u.uMirror, params.mirror ? 1 : 0); gl.uniform1f(P.mask.u.uExposure, S.exposure);
-      gl.uniform1f(P.mask.u.uEyeShow, holes.length ? 1 : 0);
-      bindTex(2, T.video, P.mask, 'uVideo');
-      gl.uniform2f(P.mask.u.uHT, MASK.hornTip[0] / MASK.w, MASK.hornTip[1] / MASK.h);
-      gl.uniform2f(P.mask.u.uHB, MASK.hornBase[0] / MASK.w, MASK.hornBase[1] / MASK.h);
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.bindVertexArray(B.maskVAO);
-      gl.uniform1f(P.mask.u.uShadow, 1); gl.drawElements(gl.TRIANGLES, B.maskN, gl.UNSIGNED_SHORT, 0);
-      gl.uniform1f(P.mask.u.uShadow, 0); gl.drawElements(gl.TRIANGLES, B.maskN, gl.UNSIGNED_SHORT, 0);
-    }
     gl.disable(gl.BLEND);
+    if (reveal > 0.001 && T.mask) drawMaskPass(mt, reveal);
   }
-
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.viewport(0, 0, W, H);
-  gl.useProgram(P.post.p);
-  bindTex(0, T.scene, P.post, 'uScene');
-  gl.uniform1f(P.post.u.uTime, now / 1000); gl.uniform1f(P.post.u.uGrain, params.grain); gl.uniform1f(P.post.u.uVig, 0.55 * params.look + 0.15);
-  drawQuad();
-  gl.bindVertexArray(null);
+  drawPost(now);
   lastRender = { fr, mt };
 }
 
@@ -1463,7 +1659,7 @@ async function startVideoFile(url) {
 async function useLiveVideo(v, kind, mirror) {
   await ensureModels(); await setRunningMode('VIDEO');
   S.video = v; S.source = kind; S.iw = v.videoWidth; S.ih = v.videoHeight; params.mirror = mirror; syncPanel(); resizeTargets();
-  S.p = 0; S.phase = 'ready'; S.wireT = 0; showScreen();
+  S.p = 0; S.phase = params.exp === 'vista' ? 'vista' : 'ready'; S.vT = 0; S.wireT = 0; showScreen();
 }
 async function useStill(url) {
   stopRun(); stopSources();
@@ -1478,7 +1674,9 @@ async function useStill(url) {
   takeLandmarks(r.faceLandmarks[0], 0, true); S.hasFace = true;
   if (S.models.seg) S.models.seg.segment(c, takeMask);
   uploadSource(c); sampleRefLuma(c); updateCrop(true);
-  S.p = 0; S.phase = 'ready'; S.wireT = 1.6; showScreen();
+  S.p = 0; S.vT = 0;
+  if (params.exp === 'vista') { S.phase = 'vista'; S.wireT = 0; } else { S.phase = 'ready'; S.wireT = 1.6; }
+  showScreen();
 }
 
 function processLive(now) {
@@ -1585,7 +1783,10 @@ function startRecording() {
     const rec = new MediaRecorder(out.captureStream(30), { mimeType: mime, videoBitsPerSecond: 8_000_000 });
     S.recChunks = []; S.videoMime = mime.split(';')[0];
     rec.ondataavailable = e => { if (e.data && e.data.size) S.recChunks.push(e.data); };
-    rec.onstop = () => { S.videoBlob = new Blob(S.recChunks, { type: S.videoMime }); $('pDlVid').disabled = false; $('pRec').textContent = '● Gravar'; updateResultButtons(); };
+    rec.onstop = () => {
+      S.videoBlob = new Blob(S.recChunks, { type: S.videoMime }); $('pDlVid').disabled = false; $('pRec').textContent = '● Gravar'; updateResultButtons();
+      if (S.onVideo) { const f = S.onVideo; S.onVideo = null; f(S.videoBlob); }
+    };
     rec.start(500); S.rec = rec; $('pRec').textContent = '■ Parar';
   } catch (e) { console.warn('gravação indisponível', e); }
 }
@@ -1613,18 +1814,210 @@ function renderBoard() {
 }
 
 // ============================================================
+// Vista sua Paquidermia (experimento 02)
+// ============================================================
+const PHRASES = ['VOCÊ RESISTIRIA?', 'VOCÊ AINDA SENTE?', 'QUANDO A PELE ENGROSSA', 'ATÉ QUANDO?', 'É TUDO NORMAL.', 'O QUE VOCÊ NÃO VÊ?', 'CALAR', 'ACOSTUMAR', 'VESTIR', 'QUANDO TODOS MUDAM', 'A MANADA PASSA', 'AINDA ARREPIA?'];
+const ACTS = { resistir: { world: 'palco', phrase: 'VOCÊ RESISTIRIA?' }, calar: { world: 'arquivo', phrase: 'CALAR' }, seguir: { world: 'feed', phrase: 'ACOSTUMAR' } };
+const TICKER = ['PASSAR ADIANTE', 'NÃO É COMIGO', 'SEGUIR', 'NORMAL', 'APENAS MAIS UM', 'CALAR', 'ROLAR', 'ACOSTUMAR'];
+let textLayerDirty = true;
+const textCan = document.createElement('canvas');
+const vistaPhrase = () => (params.custom || '').trim().toUpperCase() || params.phrase;
+// a máscara se veste em dois segundos e meio; a tipografia entra logo depois
+const vistaReveal = () => smooth(0.15, 2.6, S.vT);
+const sentence = t => { const s = t.toLowerCase(); return s.charAt(0).toUpperCase() + s.slice(1); };
+
+// texto que fica atrás da pessoa (coro e feed): vai para a GPU como textura
+function refreshTextLayer() {
+  const W = out.width, H = out.height, u = W / 1080;
+  textCan.width = W; textCan.height = H;
+  const x = textCan.getContext('2d'); x.clearRect(0, 0, W, H);
+  if (params.world === 'coro') {
+    x.font = `400 ${96 * u}px Anton, Impact, sans-serif`; x.fillStyle = 'rgba(164,189,147,0.16)';
+    for (let y = H * 0.30, k = 0; y < H * 0.97; y += 118 * u, k++) x.fillText('TODOS  TODOS  TODOS  TODOS', -150 * u + (k % 2) * 70 * u, y);
+  } else if (params.world === 'feed') {
+    x.save(); x.translate(-W * 0.05, H * 0.36); x.rotate(-0.1);
+    x.font = `400 ${84 * u}px Anton, Impact, sans-serif`;
+    TICKER.forEach((t, i) => { x.fillStyle = i % 2 ? 'rgba(225,223,219,0.14)' : 'rgba(213,164,160,0.17)'; x.fillText(`${t}   ${TICKER[(i + 3) % TICKER.length]}`, 0, H * 0.075 * i); });
+    x.restore();
+  }
+  if (!T.text) T.text = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, T.text);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textCan);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  textLayerDirty = false;
+}
+function wrapLines(ctx, text, maxW) {
+  const out2 = []; let line = '';
+  for (const w of text.split(/\s+/)) { const t = (line + ' ' + w).trim(); if (ctx.measureText(t).width > maxW && line) { out2.push(line); line = w; } else line = t; }
+  if (line) out2.push(line); return out2;
+}
+function fitText(ctx, text, maxW, maxLines, maxSize, minSize, font) {
+  let size = maxSize, lines = [];
+  for (; size >= minSize; size -= 4) { ctx.font = font(size); lines = wrapLines(ctx, text, maxW); if (lines.length <= maxLines) break; }
+  return { size, lines };
+}
+function drawVistaOverlay(now) {
+  const ctx = octx, W = out.width, H = out.height, u = W / 1080, m = 64 * u;
+  const phrase = vistaPhrase(), world = params.world, a = smooth(0.8, 2.2, S.vT);
+  if (a <= 0.01) return;
+  ctx.save(); ctx.globalAlpha = a; ctx.textBaseline = 'alphabetic';
+  if (world === 'arquivo') {
+    const ink = '#3a2c1f', fell = (s, it) => `${it ? 'italic ' : ''}400 ${s * u}px "IM Fell English", Georgia, serif`;
+    ctx.strokeStyle = 'rgba(58,44,31,0.85)'; ctx.lineWidth = 2 * u; ctx.strokeRect(W * 0.034, H * 0.025, W * 0.932, H * 0.95);
+    ctx.lineWidth = 1 * u; ctx.strokeRect(W * 0.045, H * 0.033, W * 0.91, H * 0.934);
+    ctx.fillStyle = ink; ctx.textAlign = 'center';
+    ctx.font = fell(26); ctx.fillText('TAB. XV', W * 0.17, H * 0.072); ctx.fillText('PL. VIII', W * 0.83, H * 0.072);
+    ctx.font = fell(32); spaced(ctx, 'RHINOCEROTIDÆ', W / 2, H * 0.072, 6 * u, 'center');
+    ctx.fillRect(W * 0.08, H * 0.086, W * 0.84, 1.5 * u);
+    const t = fitText(ctx, sentence(phrase), W * 0.8, 2, 60, 36, s => fell(s, true));
+    ctx.font = fell(t.size, true); t.lines.forEach((l, i) => ctx.fillText(l, W / 2, H * 0.135 + i * t.size * 1.1 * u));
+    const ov = S.oval || [0.5, 0.5, 0.37, 0.254], ob = (ov[1] + ov[3]) * H;
+    if (params.format === 'feed') {
+      ctx.font = fell(28, true); ctx.fillText('Fig. 3. Rhinoceros spectator (um chifre · ainda espia)', W / 2, ob + 46 * u);
+      ctx.fillStyle = '#31513a'; ctx.font = fell(34, true); ctx.fillText('O corpo aprende a se acostumar.', W / 2, ob + 92 * u);
+    } else {
+      ctx.font = fell(26); ctx.fillText('Fig. 3.', W / 2, ob + 50 * u);
+      ctx.font = fell(34, true); ctx.fillText('Rhinoceros spectator', W / 2, ob + 94 * u);
+      ctx.font = fell(24); ctx.fillText('(um chifre · ainda espia)', W / 2, ob + 128 * u);
+      ctx.fillRect(W * 0.12, ob + 160 * u, W * 0.76, 1.2 * u);
+      ctx.fillStyle = '#31513a'; ctx.font = fell(38, true); ctx.fillText('O corpo aprende a se acostumar.', W / 2, ob + 214 * u);
+    }
+    ctx.fillStyle = ink; ctx.font = fell(22); spaced(ctx, 'EM BREVE · PAQUIDERMIA · GRUPO DIGRESSÃO CÊNICA', W / 2, H * 0.952, 2.5 * u, 'center');
+    ctx.textAlign = 'left'; ctx.restore(); return;
+  }
+  const by = 58 * u;
+  ctx.fillStyle = COL.red; ctx.fillRect(m, by, W - 2 * m, 12 * u);
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 2 * u; ctx.strokeRect(m, by, W - 2 * m, 12 * u);
+  ctx.fillStyle = COL.ink; ctx.font = `400 ${22 * u}px "Space Mono", monospace`;
+  ctx.globalAlpha = a * 0.85; spaced(ctx, 'PAQ. / 02', W - m, by + 52 * u, 6 * u, 'right'); ctx.globalAlpha = a;
+  let hb = by + 140 * u;
+  if (world === 'termica') {
+    const t = fitText(ctx, phrase, W - 2 * m - 90 * u, 2, 96, 48, s => `700 ${s * u}px "Space Mono", monospace`);
+    ctx.font = `700 ${t.size * u}px "Space Mono", monospace`; t.lines.forEach((l, i) => { ctx.fillText(l, m, hb + i * t.size * 1.05 * u); });
+    hb += (t.lines.length - 1) * t.size * 1.05 * u;
+    ctx.font = `400 ${19 * u}px "Space Mono", monospace`;
+    spaced(ctx, 'DIAGNÓSTICO · IMAGEM SIMULADA', m, hb + 56 * u, 3 * u); spaced(ctx, BRAND.linha, m, hb + 88 * u, 3 * u);
+    // escala de temperatura e miras: o olho de verdade quente, a máscara fria
+    const sx = W - m - 18 * u, sy = H * 0.27, sh = H * 0.42, gr = ctx.createLinearGradient(0, sy, 0, sy + sh);
+    [['#fbfbd2', 0], ['#fed035', 0.17], ['#ff6f20', 0.33], ['#dd2d61', 0.5], ['#821382', 0.67], ['#300552', 0.83], ['#08031e', 1]].forEach(([c, k]) => gr.addColorStop(k, c));
+    ctx.fillStyle = gr; ctx.fillRect(sx, sy, 16 * u, sh); ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.5 * u; ctx.strokeRect(sx, sy, 16 * u, sh);
+    ctx.fillStyle = COL.ink; ctx.font = `400 ${18 * u}px "Space Mono", monospace`; ctx.textAlign = 'right';
+    ctx.fillText('43,0', sx - 8 * u, sy + 14 * u); ctx.fillText('20,0', sx - 8 * u, sy + sh); ctx.fillText('°C', sx + 16 * u, sy + sh + 32 * u); ctx.textAlign = 'left';
+    if (lastRender.mt && S.hasFace) {
+      const f = lastRender.mt.f, wob = k => fmtNum(k + 0.1 * Math.sin(now / 700 + k), 1);
+      crosshair(ctx, pt(468), u, `SP1 · ${wob(36.9)} °C`, -1);
+      crosshair(ctx, f(MASK.hornBase[0], MASK.hornBase[1]), u, `SP2 · ${wob(21.4)} °C`, 1);
+      if (MASK.anchors && MASK.anchors.nose) crosshair(ctx, f(MASK.anchors.nose[0], MASK.anchors.nose[1] + 150), u, `SP3 · ${wob(20.7)} °C`, 1);
+    }
+  } else {
+    const t = fitText(ctx, phrase, W - 2 * m, 3, 104, 56, s => `400 ${s * u}px Anton, Impact, sans-serif`);
+    ctx.font = `400 ${t.size * u}px Anton, Impact, sans-serif`; t.lines.forEach((l, i) => ctx.fillText(l, m, hb + i * t.size * 1.0 * u));
+    hb += (t.lines.length - 1) * t.size * u;
+    ctx.font = `400 ${19 * u}px "Space Mono", monospace`;
+    if (world === 'coro') spaced(ctx, 'CONTÁGIO / CONTÁGIO / CONTÁGIO', m, hb + 50 * u, 3 * u);
+    if (world === 'feed') spaced(ctx, 'ROLAR   /   DESLIZAR   /   REPETIR', m, hb + 50 * u, 3 * u);
+  }
+  ctx.font = `400 ${118 * u}px Anton, Impact, sans-serif`; ctx.fillText(BRAND.nome, m, H - 150 * u);
+  ctx.font = `400 ${19 * u}px "Space Mono", monospace`; spaced(ctx, BRAND.linha, m, H - 104 * u, 3.5 * u);
+  ctx.globalAlpha = a * 0.8; spaced(ctx, BRAND.estreia, m, H - 70 * u, 3.5 * u);
+  ctx.restore();
+}
+
+// ZIP sem dependências: entradas armazenadas sem recompressão (PNG já é comprimido)
+let crcTab = null;
+function crc32(data) {
+  if (!crcTab) crcTab = Array.from({ length: 256 }, (_, i) => { let c = i; for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  let n = 0xffffffff; for (const x of data) n = crcTab[(n ^ x) & 255] ^ (n >>> 8); return (n ^ 0xffffffff) >>> 0;
+}
+function makeZip(items) {
+  const te = new TextEncoder(), parts = [], dirs = []; let pos = 0;
+  for (const it of items) {
+    const name = te.encode(it.name), data = it.bytes, crc = crc32(data);
+    const head = new Uint8Array(30 + name.length), v = new DataView(head.buffer);
+    v.setUint32(0, 0x04034b50, true); v.setUint16(4, 20, true); v.setUint32(14, crc, true); v.setUint32(18, data.length, true); v.setUint32(22, data.length, true); v.setUint16(26, name.length, true); head.set(name, 30);
+    parts.push(head, data);
+    const dir = new Uint8Array(46 + name.length), dv = new DataView(dir.buffer);
+    dv.setUint32(0, 0x02014b50, true); dv.setUint16(4, 20, true); dv.setUint16(6, 20, true); dv.setUint32(16, crc, true); dv.setUint32(20, data.length, true); dv.setUint32(24, data.length, true); dv.setUint16(28, name.length, true); dv.setUint32(42, pos, true); dir.set(name, 46);
+    dirs.push(dir); pos += head.length + data.length;
+  }
+  const end = new Uint8Array(22), e = new DataView(end.buffer), dsz = dirs.reduce((n, d) => n + d.length, 0);
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, items.length, true); e.setUint16(10, items.length, true); e.setUint32(12, dsz, true); e.setUint32(16, pos, true);
+  return new Blob([...parts, ...dirs, end], { type: 'application/zip' });
+}
+const vStat = t => { $('vStat').textContent = t; };
+function offerShare(file) {
+  S.lastFile = file;
+  $('vShare').hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
+}
+async function vistaPoster() {
+  S.vT = Math.max(S.vT, 3); renderAll(performance.now(), true);
+  const b = await new Promise(r => out.toBlob(r, 'image/png'));
+  const f = new File([b], `paquidermia-cartaz-${params.world}.png`, { type: 'image/png' });
+  download(b, f.name); offerShare(f); vStat('CARTAZ SALVO.');
+}
+function vistaVideo() {
+  if (!pickMime() || !out.captureStream) { vStat('ESTE NAVEGADOR NÃO GRAVA VÍDEO. USE O CARTAZ.'); return; }
+  if (S.rec && S.rec.state === 'recording') return;
+  S.vT = 0; startRecording(); vStat('GRAVANDO 8 SEGUNDOS…');
+  S.onVideo = blob => { const f = new File([blob], `paquidermia-vista-${params.world}.${S.videoMime.includes('mp4') ? 'mp4' : 'webm'}`, { type: S.videoMime }); download(blob, f.name); offerShare(f); vStat('VÍDEO SALVO.'); };
+  setTimeout(() => { if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }, 8000);
+}
+async function vistaPack(n) {
+  const keep = { world: params.world, phrase: params.phrase, custom: params.custom, format: params.format, vT: S.vT };
+  const vars = n === 3
+    ? [{ world: 'palco', phrase: 'VOCÊ AINDA SENTE?' }, { world: keep.world, phrase: keep.phrase, custom: keep.custom }, { world: 'coro', phrase: 'A PELE ENGROSSA DEVAGAR.' }]
+    : [{ world: 'palco', phrase: 'VOCÊ AINDA SENTE?' }, { world: 'coro', phrase: 'QUANDO TODOS MUDAM' }, { world: 'arquivo', phrase: 'CALAR' }, { world: 'termica', phrase: 'AINDA ARREPIA?' }, { world: 'feed', phrase: 'A PELE ENGROSSA DEVAGAR.' }];
+  const fmt = n === 3 ? 'story' : 'feed';
+  if (params.format !== fmt) { params.format = fmt; resizeTargets(); }
+  S.vT = 10; const items = [];
+  for (let i = 0; i < vars.length; i++) {
+    Object.assign(params, { world: vars[i].world, phrase: vars[i].phrase, custom: vars[i].custom || '' });
+    textLayerDirty = true; renderAll(performance.now(), true);
+    const b = await new Promise(r => out.toBlob(r, 'image/png'));
+    items.push({ name: `paquidermia-${String(i + 1).padStart(2, '0')}.png`, bytes: new Uint8Array(await b.arrayBuffer()) });
+    vStat(`IMAGEM ${i + 1} / ${n}…`);
+  }
+  Object.assign(params, { world: keep.world, phrase: keep.phrase, custom: keep.custom });
+  if (params.format !== keep.format) { params.format = keep.format; resizeTargets(); }
+  S.vT = keep.vT; textLayerDirty = true; syncVista();
+  download(makeZip(items), `paquidermia-${n === 3 ? 'stories' : 'carrossel'}-${n}.zip`);
+  vStat(`PACOTE COM ${n} IMAGENS SALVO.`);
+}
+function syncVista() {
+  document.querySelectorAll('#vWorlds [data-world]').forEach(b => b.classList.toggle('on', b.dataset.world === params.world));
+  $('vPhrase').value = params.phrase; $('vCustom').value = params.custom || '';
+}
+const INTRO = {
+  pele: { idx: 'PAQ. / LAB 01', title: 'A pele<br>engrossa', lede: 'Quanto tempo demora até a <em>sua</em> pele engrossar?', how: ['Rosto de frente, com luz no rosto.', 'Quarenta segundos de feed. Só olhe.', 'No modo Resistir, cada reação sua faz a pele recuar.'] },
+  vista: { idx: 'PAQ. / LAB 02', title: 'Vista sua<br>paquidermia', lede: 'Um rosto diante da <em>manada</em>.', how: ['A máscara da peça encaixa sozinha no seu rosto, ao vivo ou na foto.', 'Escolha o mundo, a frase e o que você faz quando tudo muda.', 'Salve o cartaz, o vídeo ou o carrossel para postar.'] },
+};
+function setExp(exp) {
+  params.exp = exp;
+  document.querySelectorAll('#expSel [data-exp]').forEach(b => b.classList.toggle('on', b.dataset.exp === exp));
+  const t = INTRO[exp];
+  $('introIdx').textContent = t.idx; $('introTitle').innerHTML = t.title; $('introLede').innerHTML = t.lede;
+  $('introHow').innerHTML = t.how.map(h => `<li>${h}</li>`).join('');
+  $('modeSel').style.display = $('modeHint').style.display = exp === 'vista' ? 'none' : '';
+  try { const q = new URLSearchParams(location.search); if (exp === 'vista') q.set('exp', 'vista'); else q.delete('exp'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '')); } catch (e) { /* endereço fica como está */ }
+}
+
+// ============================================================
 // Laço principal
 // ============================================================
 let lastT = performance.now(), fpsAcc = 0, fpsN = 0;
 function renderAll(now, silent) {
   if (!S.source || !S.iw || (!S.still && !S.video)) { drawIdle(now); return; }
   updateCrop(S.source === 'image');
+  const vista = params.exp === 'vista' && S.phase === 'vista';
   const t0 = performance.now();
-  renderScene(now);
+  if (vista) { if (textLayerDirty || !T.text) refreshTextLayer(); renderVista(now); } else renderScene(now);
   perf('gl', t0);
   const t1 = performance.now();
   octx.drawImage(glCanvas, 0, 0);
-  drawOverlay(now);
+  if (vista) drawVistaOverlay(now); else drawOverlay(now);
   perf('ov', t1);
   if (!silent && S.pendingThumb != null) {
     const k = S.pendingThumb, c = document.createElement('canvas'); c.width = 360; c.height = Math.round(360 * out.height / out.width);
@@ -1636,6 +2029,7 @@ function loop(now) {
   fpsAcc += dt; fpsN++; if (fpsAcc > 1) { S.fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; status(); }
   try {
     if (S.source === 'camera' || S.source === 'video') processLive(now);
+    if (S.phase === 'vista') S.vT += dt;
     updateRun(dt);
     renderAll(now);
     syncProgress();
@@ -1660,6 +2054,8 @@ function showScreen() {
   $('btnStart').style.display = ph === 'ready' ? '' : 'none';
   $('btnPause').style.display = ph === 'run' ? '' : 'none';
   $('result').classList.toggle('show', ph === 'done' && !!S.outcome);
+  $('vbar').classList.toggle('show', ph === 'vista' && !S.vHidden);
+  $('vShow').style.display = ph === 'vista' && S.vHidden ? 'block' : 'none';
   if (ph === 'done') fillResult();
   $('btnStart').textContent = params.mode === 'resistir' && S.source !== 'image' ? '▶ Começar a resistir' : '▶ Começar';
 }
@@ -1731,6 +2127,24 @@ function wireUI() {
   $('pReset').onclick = () => { stopRun(); S.p = 0; if (S.source) { S.phase = 'ready'; showScreen(); } };
   $('pRec').onclick = () => { if (S.rec && S.rec.state === 'recording') S.rec.stop(); else startRecording(); };
   $('pDur').onchange = e => { params.duration = +e.target.value; };
+  // Vista
+  document.querySelectorAll('#expSel [data-exp]').forEach(b => b.onclick = () => setExp(b.dataset.exp));
+  $('vPhrase').innerHTML = PHRASES.map(p => `<option>${p}</option>`).join('');
+  document.querySelectorAll('#vWorlds [data-world]').forEach(b => b.onclick = () => { params.world = b.dataset.world; textLayerDirty = true; syncVista(); });
+  document.querySelectorAll('#vActs [data-act]').forEach(b => b.onclick = () => {
+    const a = ACTS[b.dataset.act]; Object.assign(params, { world: a.world, phrase: a.phrase, custom: '' }); textLayerDirty = true;
+    document.querySelectorAll('#vActs [data-act]').forEach(x => x.classList.toggle('on', x === b)); syncVista();
+  });
+  $('vPhrase').onchange = e => { params.phrase = e.target.value; params.custom = ''; $('vCustom').value = ''; };
+  $('vCustom').oninput = e => { params.custom = e.target.value; };
+  $('vPng').onclick = () => vistaPoster().catch(e => vStat('ERRO: ' + e.message));
+  $('vVid').onclick = vistaVideo;
+  $('vPack3').onclick = () => vistaPack(3).catch(e => vStat('ERRO: ' + e.message));
+  $('vPack5').onclick = () => vistaPack(5).catch(e => vStat('ERRO: ' + e.message));
+  $('vShare').onclick = async () => { try { await navigator.share({ files: [S.lastFile], title: 'Paquidermia', text: 'Vista sua paquidermia. #Paquidermia' }); } catch (e) { console.warn(e); } };
+  $('vBack').onclick = () => { stopRun(); stopSources(); S.source = null; S.phase = 'intro'; showScreen(); };
+  $('vHide').onclick = () => { S.vHidden = true; showScreen(); };
+  $('vShow').onclick = () => { S.vHidden = false; showScreen(); };
   $('pMask').innerHTML = Object.entries(MASKS).map(([k, m]) => `<option value="${k}">${m.nome}</option>`).join('');
   $('pMask').value = params.maskKind;
   $('pMask').onchange = e => useMask(e.target.value);
@@ -1747,8 +2161,8 @@ async function boot() {
   try { initGL(); await loadMaskTex(); }
   catch (e) { console.error(e); fail('Este aparelho não roda a experiência (WebGL2). Tente o Chrome ou o Safari atualizados.'); return; }
   useMask(qs.get('mascara') === '34' || !MASKS.frontal ? 'tresQuartos' : 'frontal');
-  wireUI(); showScreen();
-  try { await Promise.race([Promise.all([document.fonts.load('80px Anton'), document.fonts.load('700 30px "Space Mono"'), document.fonts.load('400 20px "Space Mono"')]), new Promise(r => setTimeout(r, 2500))]); } catch (e) { /* segue com fontes do sistema */ }
+  wireUI(); setExp(params.exp); syncVista(); showScreen();
+  try { await Promise.race([Promise.all([document.fonts.load('80px Anton'), document.fonts.load('700 30px "Space Mono"'), document.fonts.load('400 20px "Space Mono"'), document.fonts.load('400 30px "IM Fell English"'), document.fonts.load('italic 400 30px "IM Fell English"')]), new Promise(r => setTimeout(r, 2500))]); } catch (e) { /* segue com fontes do sistema */ }
   requestAnimationFrame(loop);
   // painel de ajustes só para a equipe: abra com ?diretor no endereço
   if (qs.has('diretor')) document.body.classList.add('diretor');
