@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050605">
+<title>Paquidermia · A pele engrossa</title>
+<meta name="description" content="Quanto tempo demora até a sua pele engrossar? Experimento interativo de Paquidermia, do Grupo Digressão Cênica. A imagem é processada no seu aparelho.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="A pele engrossa · Paquidermia">
+<meta property="og:description" content="Quanto tempo demora até a sua pele engrossar? Experimente no navegador. Estreia 22/11, Teatro Gilberto Mayer.">
+<meta property="og:url" content="https://lucsbuen.github.io/paquidermia/">
+<meta property="og:image" content="https://lucsbuen.github.io/paquidermia/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23D62A1E'/%3E%3Ctext x='32' y='47' font-family='Impact,Arial Narrow,sans-serif' font-size='40' text-anchor='middle' fill='%23EFE9DC'%3EP.%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050605; --ink:#EFE9DC; --dim:#a9a69d; --line:#2b2f2b; --red:#D62A1E; --green:#79B36E;
+  --cond:'Anton', Impact, 'Arial Narrow', sans-serif; --mono:'Space Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 var(--mono);-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+#app{min-height:100dvh;display:flex;justify-content:center;align-items:center;gap:22px;padding:12px}
+#stage{position:relative;height:calc(100dvh - 24px);aspect-ratio:9/16;max-width:calc(100vw - 24px);background:#000;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.6);outline:1px solid #151815}
+#stage.feed{aspect-ratio:4/5}
+#out{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+
+.overlay{position:absolute;inset:0;display:none;flex-direction:column;padding:6.5% 6% 6%;background:rgba(4,5,4,.9);z-index:5}
+.overlay.show{display:flex}
+.bar{height:10px;border:1.5px solid var(--ink);margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--red)}
+.idx{align-self:flex-end;font-size:12px;letter-spacing:.3em;opacity:.8}
+h1{font:400 clamp(54px,9.6vh,104px)/.94 var(--cond);margin:3.5vh 0 0;letter-spacing:.005em;text-transform:uppercase}
+.lede{font:400 clamp(22px,3.3vh,34px)/1.05 var(--cond);margin:2.2vh 0 0;text-transform:uppercase;max-width:15em}
+.lede em{font-style:normal;color:var(--green)}
+.how{margin:3vh 0 0;padding:0;list-style:none;counter-reset:n;max-width:30em}
+.how li{counter-increment:n;display:flex;gap:12px;margin:0 0 10px;font-size:13px;color:#d9d4c8}
+.how li::before{content:counter(n,decimal-leading-zero);color:var(--red);font-weight:700}
+.ctas{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.btn{border:1.5px solid var(--ink);background:transparent;padding:15px 16px;font-weight:700;letter-spacing:.16em;font-size:13px;text-transform:uppercase;text-align:center}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff}
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.35;cursor:default;filter:none}
+.fine{font-size:11px;color:var(--dim);margin:14px 0 0}
+.brand{font-size:10.5px;letter-spacing:.28em;margin-top:16px;opacity:.75}
+.modes{display:flex;gap:0;margin-top:3vh;border:1.5px solid var(--ink);width:max-content}
+.modes button{background:transparent;border:0;padding:9px 14px;font-size:11px;letter-spacing:.2em;font-weight:700}
+.modes button.on{background:var(--ink);color:#111}
+.modehint{font-size:11.5px;color:var(--dim);margin-top:8px;max-width:28em}
+
+#loader{justify-content:center;align-items:flex-start}
+#loader .t{font:400 clamp(40px,7vh,72px)/.95 var(--cond);text-transform:uppercase}
+#loader .m{margin-top:16px;font-size:12px;letter-spacing:.2em}
+#loader .bar{width:100%;margin-top:18px}
+
+#dock{position:absolute;left:0;right:0;bottom:11%;display:none;gap:8px;justify-content:center;align-items:center;padding:0 5%;z-index:4;pointer-events:none}
+#dock.show{display:flex}
+#dock > *{pointer-events:auto}
+#dock .btn{background:rgba(5,6,5,.72);backdrop-filter:blur(6px);padding:13px 16px}
+#dock .btn.red{background:var(--red)}
+#dock .ico{width:48px;padding:13px 0}
+#msg{position:absolute;left:6%;right:6%;top:46%;text-align:center;font-weight:700;letter-spacing:.2em;font-size:13px;z-index:3;pointer-events:none;opacity:0;transition:opacity .25s;text-shadow:0 2px 12px #000}
+#msg.show{opacity:1}
+
+#result{background:linear-gradient(180deg,rgba(4,5,4,0) 0%,rgba(4,5,4,.25) 40%,rgba(4,5,4,.92) 72%)}
+#result .r-top{margin-top:auto}
+#result h2{font:400 clamp(40px,7.2vh,76px)/.95 var(--cond);margin:0;text-transform:uppercase}
+#result .sub{font-size:12px;letter-spacing:.2em;margin:10px 0 18px;color:#d9d4c8}
+#result .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#result .grid .wide{grid-column:1/-1}
+
+#panel{display:none;width:330px;max-height:calc(100dvh - 24px);overflow:auto;border:1px solid var(--line);background:#080a08;padding:16px 16px 22px;font-size:12px}
+body.diretor #panel{display:block}
+#panel h3{font:700 10.5px var(--mono);letter-spacing:.24em;margin:18px 0 8px;color:var(--dim);text-transform:uppercase}
+#panel h3:first-child{margin-top:0}
+#panel .row{display:flex;gap:6px;flex-wrap:wrap}
+#panel .row .btn{flex:1;padding:9px 8px;font-size:10.5px;letter-spacing:.12em}
+#panel label.s{display:grid;grid-template-columns:118px 1fr 34px;gap:8px;align-items:center;margin:6px 0;color:#d4d0c5}
+#panel label.c{display:flex;gap:8px;align-items:center;margin:6px 0;color:#d4d0c5}
+#panel input[type=range]{width:100%;accent-color:var(--red)}
+#panel select{width:100%;background:#0f120f;border:1px solid #333a33;padding:7px}
+#panel .seg{display:flex;border:1px solid #444}
+#panel .seg button{flex:1;background:transparent;border:0;padding:8px 4px;font-size:10.5px;letter-spacing:.14em}
+#panel .seg button.on{background:var(--ink);color:#111}
+#panel .status{margin-top:16px;color:var(--dim);font-size:10.5px;letter-spacing:.08em;white-space:pre-line}
+#panel .note{color:var(--dim);font-size:11px;margin:6px 0 0}
+#panelToggle{display:none}
+
+@media (max-width: 980px){
+  #app{padding:0;gap:0}
+  #stage{height:100dvh;width:100vw;max-width:none;aspect-ratio:auto;box-shadow:none;outline:0}
+  #stage.feed{aspect-ratio:auto}
+  #panel{position:fixed;left:0;right:0;bottom:0;width:auto;max-height:64dvh;z-index:20;transform:translateY(105%);transition:transform .25s;border-width:1px 0 0}
+  #panel.open{transform:none}
+  body.diretor #panelToggle{display:block}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="stage">
+    <canvas id="out" width="1080" height="1920"></canvas>
+
+    <section id="intro" class="overlay show">
+      <div class="bar"><i style="width:7%"></i></div>
+      <div class="idx">PAQ. / LAB 01</div>
+      <h1>A pele<br>engrossa</h1>
+      <p class="lede">Quanto tempo demora até a <em>sua</em> pele engrossar?</p>
+      <ol class="how">
+        <li>Rosto de frente, com luz no rosto.</li>
+        <li>Quarenta segundos de feed. Só olhe.</li>
+        <li>No modo Resistir, cada reação sua faz a pele recuar.</li>
+      </ol>
+      <div class="modes" id="modeSel">
+        <button data-mode="assistir" class="on">ASSISTIR</button>
+        <button data-mode="resistir">RESISTIR</button>
+      </div>
+      <div class="modehint" id="modeHint">A metamorfose corre inteira, do primeiro minuto ao primeiro ano de feed.</div>
+      <div class="ctas">
+        <button id="btnCam" class="btn red">Abrir a câmera</button>
+        <button id="btnPhoto" class="btn">Usar uma foto</button>
+      </div>
+      <p class="fine" id="introNote">Nada sai do seu aparelho. A imagem é processada aqui, no navegador.</p>
+      <div class="brand">EM BREVE · GRUPO DIGRESSÃO CÊNICA</div>
+    </section>
+
+    <section id="loader" class="overlay">
+      <div class="t">Preparando<br>o laboratório</div>
+      <div class="bar"><i id="loadBar" style="width:0%"></i></div>
+      <div class="m" id="loadMsg">CARREGANDO…</div>
+    </section>
+
+    <div id="msg"></div>
+
+    <div id="dock">
+      <button class="btn ico" id="btnBack" title="Voltar">✕</button>
+      <button class="btn red" id="btnStart">▶ Começar</button>
+      <button class="btn ico" id="btnPause" title="Pausar">❚❚</button>
+      <button class="btn ico" id="panelToggle" title="Ajustes">⚙</button>
+    </div>
+
+    <section id="result" class="overlay">
+      <div class="r-top">
+        <h2 id="resTitle">Metamorfose<br>concluída.</h2>
+        <div class="sub" id="resSub">1 ANO DE FEED</div>
+        <div class="grid">
+          <button class="btn red wide" id="btnShare">Compartilhar vídeo</button>
+          <button class="btn" id="btnDlVideo">Baixar vídeo</button>
+          <button class="btn" id="btnDlImg">Baixar imagem</button>
+          <button class="btn" id="btnBoard">Prancha 8 estágios</button>
+          <button class="btn" id="btnAgain">De novo</button>
+          <button class="btn wide" id="btnPremium" hidden>Quero a versão completa</button>
+          <button class="btn wide" id="btnHome">Trocar câmera / foto</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside id="panel">
+    <h3>Fonte</h3>
+    <div class="row"><button class="btn" id="pCam">Câmera</button><button class="btn" id="pPhoto">Foto</button></div>
+    <h3>Modo</h3>
+    <div class="seg" id="pMode"><button data-mode="assistir" class="on">ASSISTIR</button><button data-mode="resistir">RESISTIR</button></div>
+    <h3>Tempo e formato</h3>
+    <label class="s"><span>Duração</span><select id="pDur"><option>20</option><option>30</option><option selected>40</option><option>50</option><option>60</option></select><span>s</span></label>
+    <div class="seg" id="pFmt"><button data-fmt="story" class="on">STORY 9:16</button><button data-fmt="feed">FEED 4:5</button></div>
+    <h3>Progresso</h3>
+    <input type="range" id="pProg" min="0" max="1000" value="0">
+    <div class="row" style="margin-top:8px"><button class="btn" id="pPlay">▶ Rodar</button><button class="btn" id="pReset">↺ Zerar</button></div>
+    <h3>Ajustes finos</h3>
+    <label class="s"><span>Luz teatral</span><input type="range" data-k="look" min="0" max="1" step="0.01"><span></span></label>
+    <label class="s"><span>Relevo</span><input type="range" data-k="relief" min="0" max="2.5" step="0.01"><span></span></label>
+    <label class="s"><span>Brilho úmido</span><input type="range" data-k="gloss" min="0" max="2" step="0.01"><span></span></label>
+    <label class="s"><span>Deformação</span><input type="range" data-k="deform" min="0" max="2" step="0.01"><span></span></label>
+    <label class="s"><span>Chifre</span><input type="range" data-k="hornScale" min="0.5" max="1.5" step="0.01"><span></span></label>
+    <label class="s"><span>Máscara final</span><select id="pMask"></select><span></span></label>
+    <label class="s"><span>Máscara: escala</span><input type="range" data-k="maskScale" min="0.7" max="1.5" step="0.01"><span></span></label>
+    <label class="s"><span>Máscara: altura</span><input type="range" data-k="maskLift" min="-0.3" max="0.3" step="0.01"><span></span></label>
+    <label class="s"><span>Granulação</span><input type="range" data-k="grain" min="0" max="0.2" step="0.005"><span></span></label>
+    <label class="c"><input type="checkbox" data-k="hud"> Medições na tela (HUD)</label>
+    <label class="c"><input type="checkbox" data-k="keepBg"> Manter o fundo original</label>
+    <label class="c"><input type="checkbox" data-k="mirror"> Espelhar</label>
+    <h3>Exportar</h3>
+    <div class="row"><button class="btn" id="pImg">Imagem</button><button class="btn" id="pBoard">Prancha</button></div>
+    <div class="row" style="margin-top:6px"><button class="btn" id="pRec">● Gravar</button><button class="btn" id="pDlVid" disabled>Baixar vídeo</button></div>
+    <p class="note">Com foto, “Rodar” grava sozinho os 40 s. Com câmera, a gravação começa junto com a metamorfose.</p>
+    <div class="status" id="pStatus">—</div>
+  </aside>
+</div>
+<input id="file" type="file" accept="image/*" hidden>
+
+<script src="js/facemesh-data.js"></script>
+<script src="js/mask-data.js"></script>
+<script src="js/mask-frontal-data.js"></script>
+<script type="module">
+// ============================================================
+// PAQUIDERMIA · LAB 01 · A PELE ENGROSSA · V3 (tempo real)
+// Rastreamento: MediaPipe Face Landmarker (478 pontos) + Selfie Segmenter.
+// Render: WebGL2. Pele procedural no espaço UV canônico do rosto,
+// deformação real da imagem pela malha, chifre 2.5D e máscara no fim.
+// Tudo roda no aparelho; nada é enviado.
+// ============================================================
+
+const MP_VER = '0.10.35';
+const MP_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}`;
+const ONLINE_MODELS = {
+  face: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+  seg: 'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite',
+};
+// Quando houver formulário/servidor para a versão completa, coloque o link aqui e o botão aparece.
+const PREMIUM_URL = null;
+const BRAND = { linha: 'EM BREVE · GRUPO DIGRESSÃO CÊNICA', nome: 'PAQUIDERMIA', estreia: '22/11 · 19H30 · TEATRO GILBERTO MAYER' };
+const COL = { ink: '#EFE9DC', red: '#D62A1E', green: '#79B36E', dark: 'rgba(8,9,8,0.78)' };
+
+const STAGES = [
+  { p: 0.00, t: 'PELE HUMANA' },
+  { p: 0.10, t: 'A LUZ MUDA' },
+  { p: 0.22, t: 'MICROFISSURAS' },
+  { p: 0.35, t: 'A TEXTURA INVADE' },
+  { p: 0.50, t: 'A PELE ENGROSSA' },
+  { p: 0.65, t: 'PLACAS E SULCOS' },
+  { p: 0.78, t: 'O CHIFRE CRESCE' },
+  { p: 0.90, t: 'PAQUIDERMIA' },
+];
+// marcos do carrossel "a pele engrossa": 1 minuto → 1 ano de feed
+const FEED = [
+  { p: 0.00, min: 1 }, { p: 0.25, min: 60 }, { p: 0.50, min: 10080 }, { p: 0.75, min: 43200 }, { p: 1.00, min: 525600 },
+];
+
+const FACE_OVAL = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+const EYE_R = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246];
+const EYE_L = [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466];
+const LIPS = [61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185];
+const BROW_R = [70,63,105,66,107,55,65,52,53,46];
+const BROW_L = [300,293,334,296,336,285,295,282,283,276];
+const REACT_KEYS = ['browInnerUp','browDownLeft','browDownRight','browOuterUpLeft','browOuterUpRight','eyeWideLeft','eyeWideRight',
+  'eyeSquintLeft','eyeSquintRight','jawOpen','mouthFrownLeft','mouthFrownRight','mouthSmileLeft','mouthSmileRight',
+  'noseSneerLeft','noseSneerRight','mouthPucker','mouthStretchLeft','mouthStretchRight','cheekPuff','mouthPressLeft','mouthPressRight'];
+
+const qs = new URLSearchParams(location.search);
+const isMobile = matchMedia('(pointer:coarse)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+const params = {
+  duration: 40, mode: 'assistir', format: 'story',
+  look: 1, relief: 1, gloss: 1, deform: 1, hornScale: 1, maskScale: 1, maskLift: 0,
+  grain: 0.055, hud: true, keepBg: false, mirror: true,
+};
+const FRAMING = { story: { faceFrac: 0.29, faceY: 0.53 }, feed: { faceFrac: 0.37, faceY: 0.56 } };
+
+// ---------- utilidades ----------
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const MESH = window.PQ_MESH, MASKS = window.PQ_MASKS;
+let MASK = MASKS.frontal || MASKS.tresQuartos;
+const NV = 468, NL = 478;
+const UV = Float32Array.from(MESH.uv);
+const TRI = Uint16Array.from(MESH.tri);
+// anel em volta do contorno do rosto: leva a pele para a testa alta, as têmporas e o pescoço
+const NR = FACE_OVAL.length, NVX = NV + NR;
+const MGX = 22, MGY = 28;
+const RING_K = FACE_OVAL.map(i => 1.26 + 0.28 * smooth(0.62, 0.95, UV[i * 2 + 1]));
+const UVX = new Float32Array(NVX * 2), RINGF = new Float32Array(NVX);
+UVX.set(UV);
+FACE_OVAL.forEach((i, j) => {
+  const k = RING_K[j];
+  UVX[(NV + j) * 2] = 0.5 + (UV[i * 2] - 0.5) * k; UVX[(NV + j) * 2 + 1] = 0.52 + (UV[i * 2 + 1] - 0.52) * k; RINGF[NV + j] = 1;
+});
+const TRIX = (() => {
+  const t = Array.from(TRI);
+  for (let j = 0; j < NR; j++) { const a = FACE_OVAL[j], b = FACE_OVAL[(j + 1) % NR], c = NV + j, d = NV + (j + 1) % NR; t.push(a, b, c, b, d, c); }
+  return Uint16Array.from(t);
+})();
+
+class OneEuro {
+  constructor(n, minCutoff, beta, dCutoff = 1) { this.n = n; this.mc = minCutoff; this.beta = beta; this.dc = dCutoff; this.x = null; this.dx = new Float32Array(n); this.t = 0; }
+  a(c, dt) { const tau = 1 / (2 * Math.PI * c); return 1 / (1 + tau / dt); }
+  reset() { this.x = null; }
+  filter(v, t) {
+    if (!this.x) { this.x = Float32Array.from(v); this.dx.fill(0); this.t = t; return this.x; }
+    const dt = Math.max(1e-3, t - this.t); this.t = t;
+    const ad = this.a(this.dc, dt);
+    for (let i = 0; i < this.n; i++) {
+      this.dx[i] += ad * ((v[i] - this.x[i]) / dt - this.dx[i]);
+      this.x[i] += this.a(this.mc + this.beta * Math.abs(this.dx[i]), dt) * (v[i] - this.x[i]);
+    }
+    return this.x;
+  }
+}
+
+// ---------- estado ----------
+const S = {
+  phase: 'intro', source: null, video: null, stream: null, still: null, iw: 0, ih: 0,
+  lm: null, hasFace: false, lastSeen: 0, lastVT: -1, frameN: 0,
+  p: 0, playing: false, running: false, countdown: 0, elapsed: 0, outcome: null,
+  crop: null, refLuma: 0.3, exposure: 1, skin: null, seg: null, segW: 0, segH: 0, segDirty: false, segOK: false, segInvert: false, segChecked: false,
+  blend: {}, baseline: null, react: 0, resisted: 0, calib: [],
+  rec: null, recChunks: [], videoBlob: null, videoMime: '', thumbs: [], lastThumb: -1,
+  fps: 0, models: null, modelsPromise: null, error: null, wireT: 0,
+};
+const euro = new OneEuro(NL * 3, 2.2, 0.015);
+
+// ---------- canvas de saída ----------
+const out = $('out');
+const octx = out.getContext('2d');
+const glCanvas = document.createElement('canvas');
+const gl = glCanvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: false });
+
+function outSize() {
+  // ao vivo a câmera entrega 720p: renderizar acima disso só custa quadros
+  const big = !isMobile && S.source !== 'camera' && S.source !== 'video';
+  return params.format === 'feed' ? (big ? [1080, 1350] : [864, 1080]) : (big ? [1080, 1920] : [720, 1280]);
+}
+
+// ============================================================
+// GLSL
+// ============================================================
+const G_COMMON = `
+float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+float hash12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+vec2 hash22(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973)); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.xx + p3.yz) * p3.zy); }
+float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f);
+  return mix(mix(hash12(i), hash12(i+vec2(1.0,0.0)), u.x), mix(hash12(i+vec2(0.0,1.0)), hash12(i+vec2(1.0,1.0)), u.x), u.y); }
+float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ s += a*vnoise(p); p = p*2.03 + vec2(17.1, 9.3); a *= 0.5; } return s; }
+`;
+const G_GRADE = `
+uniform vec2 uFaceC; uniform float uFaceH; uniform float uAspect; uniform float uLook; uniform float uExposure;
+// foco de luz em elipse no rosto: cabeça acesa, corpo afundando no preto
+float stageSpot(vec2 cuv){
+  vec2 d = cuv - uFaceC; d.x *= uAspect;
+  float e = length(vec2(d.x / 0.95, d.y + 0.08*uFaceH)) / max(uFaceH, 1e-3);
+  return exp(-pow(max(e - 0.55, 0.0), 2.0) * 6.0);
+}
+vec3 stageGrade(vec3 c0, vec2 cuv){
+  vec3 c = c0 * uExposure;
+  float l = luma(c);
+  vec3 g = mix(vec3(l), c, 0.80);
+  g = pow(max(g, vec3(0.0)), vec3(1.35));
+  g *= mix(vec3(0.62, 0.70, 1.08), vec3(1.10, 0.97, 0.82), smoothstep(0.03, 0.45, l));
+  g *= mix(0.03, 1.15, stageSpot(cuv));
+  return mix(c0, g, uLook);
+}
+vec3 stageBg(vec2 cuv){
+  vec2 d = cuv - (uFaceC + vec2(0.0, -0.05*uFaceH)); d.x *= uAspect;
+  float r = length(d) / max(uFaceH*1.9, 1e-3);
+  return vec3(0.010, 0.011, 0.012) + exp(-r*r) * vec3(0.030, 0.024, 0.042);
+}
+`;
+const VS_QUAD = `#version 300 es
+layout(location=0) in vec2 aPos;
+out vec2 vUV;
+void main(){ vUV = vec2(aPos.x*0.5+0.5, 0.5-aPos.y*0.5); gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+// textura procedural da pele, assada uma vez no espaço UV do rosto
+const FS_BAKE = `#version 300 es
+precision highp float;
+out vec4 o;
+uniform float uSize; uniform int uMode;
+${G_COMMON}
+vec3 voro(vec2 x){
+  vec2 n = floor(x), f = fract(x); vec2 mg = vec2(0.0), mr = vec2(0.0); float md = 8.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++){
+    vec2 g = vec2(float(i), float(j)); vec2 r = g + hash22(n + g) - f; float d = dot(r, r);
+    if (d < md){ md = d; mr = r; mg = g; }
+  }
+  float f1 = sqrt(md); md = 8.0;
+  for (int j = -2; j <= 2; j++) for (int i = -2; i <= 2; i++){
+    vec2 g = mg + vec2(float(i), float(j)); vec2 r = g + hash22(n + g) - f;
+    if (dot(mr - r, mr - r) > 1e-5) md = min(md, dot(0.5*(mr + r), normalize(r - mr)));
+  }
+  return vec3(md, hash12(n + mg + 0.5), f1);
+}
+vec2 warp(vec2 uv, float f, float amp, float seed){ return (vec2(fbm(uv*f + seed), fbm(uv*f + seed + 7.31)) - 0.5) * amp; }
+void main(){
+  vec2 uv = gl_FragCoord.xy / uSize;
+  vec3 vl = voro(uv*8.5 + warp(uv, 2.3, 1.5, 3.0));
+  if (uMode == 0){
+    vec3 vf = voro(uv*92.0 + warp(uv, 11.0, 1.4, 1.0));
+    vec3 vm = voro(uv*29.0 + warp(uv, 5.0, 2.0, 2.0));
+    o = vec4(clamp(vf.x/0.6, 0.0, 1.0), clamp(vm.x/0.6, 0.0, 1.0), clamp(vl.x/0.6, 0.0, 1.0), vm.y);
+  } else {
+    vec3 vt = voro(uv*62.0 + warp(uv, 9.0, 0.8, 5.0));
+    o = vec4(vl.y, 1.0 - smoothstep(0.05, 0.42, vt.z), fbm(uv*6.0 + 11.0), fbm(uv*38.0 + 4.0));
+  }
+}`;
+
+// fundo de palco + luz teatral sobre a pessoa
+const FS_BG = `#version 300 es
+precision highp float;
+in vec2 vUV; out vec4 o;
+uniform sampler2D uVideo, uSeg;
+uniform vec4 uCrop; uniform float uMirror, uSegOK, uSegInvert, uKeepBg; uniform vec3 uRimCol;
+${G_COMMON}
+${G_GRADE}
+vec2 toImg(vec2 c){ if (uMirror > 0.5) c.x = 1.0 - c.x; return uCrop.xy + c*uCrop.zw; }
+bool inImg(vec2 u){ return u.x >= 0.0 && u.y >= 0.0 && u.x <= 1.0 && u.y <= 1.0; }
+float segAt(vec2 u){ float m = texture(uSeg, u).r; return uSegInvert > 0.5 ? 1.0 - m : m; }
+float person(vec2 c){
+  vec2 u = toImg(c); if (!inImg(u)) return 0.0;
+  // erosão leve: tira a franja clara do fundo que vaza pelo cabelo
+  vec2 ts = vec2(textureSize(uSeg, 0));
+  vec2 e = vec2(0.0035, 0.0035 * ts.x / max(ts.y, 1.0));
+  float m = min(min(segAt(u), segAt(u + vec2(e.x, 0.0))), min(segAt(u - vec2(e.x, 0.0)), min(segAt(u + vec2(0.0, e.y)), segAt(u - vec2(0.0, e.y)))));
+  return mix(1.0, smoothstep(0.35, 0.85, m), uSegOK);
+}
+void main(){
+  vec2 u = toImg(vUV);
+  vec3 c = inImg(u) ? texture(uVideo, u).rgb : vec3(0.0);
+  // quando a câmera recua além da foto, a borda dela some no preto do palco
+  float edge = smoothstep(0.0, 0.05, u.x) * smoothstep(0.0, 0.05, 1.0 - u.x) * smoothstep(0.0, 0.04, u.y) * smoothstep(0.0, 0.06, 1.0 - u.y);
+  float per = person(vUV) * edge;
+  // na faixa da borda, pixel muito claro é fundo vazando (atraso do recorte): apaga
+  vec3 subj = stageGrade(c, vUV) * mix(0.4, 1.0, per) * (1.0 - 0.85*smoothstep(0.55, 0.9, luma(c))*(1.0 - smoothstep(0.6, 1.0, per)));
+  vec3 bg = mix(stageBg(vUV), subj*0.45 + stageBg(vUV), uKeepBg);
+  vec3 col = mix(bg, subj, per);
+  float rim = per * (1.0 - person(vUV + vec2(0.012, 0.0)));
+  vec2 d = vUV - uFaceC; d.x *= uAspect;
+  float near = exp(-dot(d, d) / max(uFaceH*uFaceH*2.2, 1e-4));
+  col += uRimCol * rim * 0.65 * near * uLook;
+  o = vec4(col, 1.0);
+}`;
+
+const VS_FACE = `#version 300 es
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec2 aSrc;
+layout(location=2) in vec3 aNrm;
+layout(location=3) in vec2 aUV;
+layout(location=4) in float aRing;
+uniform vec2 uRes;
+out vec2 vSrc; out vec2 vUV; out vec3 vN; out vec3 vPos; out vec2 vCuv; out float vRing;
+void main(){
+  vec2 c = aPos.xy / uRes;
+  vCuv = c; vSrc = aSrc; vUV = aUV; vN = aNrm; vPos = aPos; vRing = aRing;
+  gl_Position = vec4(c.x*2.0 - 1.0, 1.0 - c.y*2.0, clamp(-aPos.z/(uRes.x*2.0), -0.99, 0.99), 1.0);
+}`;
+
+const FS_FACE = `#version 300 es
+precision highp float;
+in vec2 vSrc; in vec2 vUV; in vec3 vN; in vec3 vPos; in vec2 vCuv; in float vRing;
+out vec4 o;
+uniform sampler2D uVideo, uBake0, uBake1, uReg0, uReg1;
+uniform float uP, uRefLuma, uFacePx, uRelief, uGloss;
+uniform vec3 uKeyDir, uKeyCol, uRimDir, uRimCol, uSkin, uEndCol;
+uniform vec2 uRes, uHornBase; uniform float uHornW, uHornGrow;
+${G_COMMON}
+${G_GRADE}
+struct Skin { float h; float cav; float plate; float rM; float n1; };
+Skin skin(vec2 uv, float lp){
+  vec4 b0 = texture(uBake0, uv), b1 = texture(uBake1, uv);
+  vec4 r0 = texture(uReg0, uv), r1 = texture(uReg1, uv);
+  float soft = 1.0 - 0.55*r0.b;
+  float dF = b0.r*0.6, dM = b0.g*0.6, dL = b0.b*0.6;
+  float nz = b1.a;
+  // as rachaduras se propagam: cada trecho só aparece quando o campo passa do limiar
+  // parte das bordas médias nunca abre: as células se fundem em polígonos irregulares
+  float propM = smoothstep(0.45, 0.75, min(lp*1.5, 0.85) + (nz - 0.5)*1.4);
+  float propF = smoothstep(0.35, 0.70, lp*1.9 + (nz - 0.5)*1.1 - 0.15);
+  float wL = smoothstep(0.45, 0.85, lp);
+  float wid = 0.5 + nz;
+  float cF = (1.0 - smoothstep(0.0, mix(0.02, 0.06, lp)*wid, dF)) * propF * soft;
+  float cM = (1.0 - smoothstep(0.0, mix(0.012, 0.042, smoothstep(0.15, 0.6, lp))*wid, dM)) * propM * soft;
+  float cL = (1.0 - smoothstep(0.0, mix(0.04, 0.20, wL), dL)) * wL * soft;
+  float lipM = (smoothstep(0.0, 0.06, dM) - smoothstep(0.06, 0.16, dM)) * propM;
+  float plate = smoothstep(0.0, 0.5, dL);
+  float micro = (vnoise(uv*140.0) - 0.5) * smoothstep(0.2, 0.7, lp);
+  float bridge = r1.g * smoothstep(0.42, 0.62, uP) * 1.2;
+  float tub = b1.g * smoothstep(0.62, 0.95, lp);
+  // no fim, menos rachadura média e mais ruga fina: couro, não calçamento
+  float fineK = mix(0.45, 0.75, smoothstep(0.4, 0.9, lp));
+  float medK = mix(0.85, 0.5, smoothstep(0.6, 0.95, lp));
+  Skin s;
+  s.h = -fineK*cF - medK*cM + 0.16*lipM - 1.5*cL + 0.35*wL*plate + 0.32*tub + 0.25*micro + (b1.b - 0.5)*0.3*lp + bridge;
+  s.cav = clamp(0.6*cF + 0.72*medK*cM + 0.80*cL, 0.0, 1.0);
+  s.plate = plate*wL; s.rM = b0.a; s.n1 = b1.b;
+  return s;
+}
+// quanto este pixel parece pele (compara com a cor média do rosto)
+float skinLik(vec3 c){
+  vec2 ch = c.rg / (c.r + c.g + c.b + 1e-3), ch0 = uSkin.rg / (uSkin.r + uSkin.g + uSkin.b + 1e-3);
+  float dd = distance(ch, ch0), lr = luma(c) / max(luma(uSkin), 1e-3);
+  return exp(-dd*dd / (2.0*0.028*0.028)) * smoothstep(0.32, 0.6, lr) * (1.0 - smoothstep(1.6, 2.2, lr));
+}
+void main(){
+  vec4 r0 = texture(uReg0, vUV), r1 = texture(uReg1, vUV), bc = texture(uBake1, vUV);
+  // contágio: começa nas maçãs do rosto e na testa; olhos, boca e pescoço por último
+  float d = min(min(distance(vUV, vec2(0.30, 0.58)), distance(vUV, vec2(0.70, 0.58))), distance(vUV, vec2(0.50, 0.25)));
+  float delay = clamp(d*0.45 + bc.r*0.06 + (bc.b - 0.5)*0.12 + r1.r*0.05 + r0.g*0.10 + r0.b*0.05 + vRing*0.06, 0.0, 0.32);
+  float lp = clamp((uP - delay) / 0.68, 0.0, 1.0);
+
+  vec2 dx = dFdx(vUV), dy = dFdy(vUV);
+  Skin s0 = skin(vUV, lp);
+  Skin sx = skin(vUV + dx, lp);
+  Skin sy = skin(vUV + dy, lp);
+  float amp = uFacePx * 0.010 * uRelief * (0.35 + 0.65*lp);
+  vec3 P = vec3(vPos.x, -vPos.y, vPos.z);
+  vec3 N = normalize(vN);
+  vec3 sS = dFdx(P), sT = dFdy(P);
+  vec3 R1 = cross(sT, N), R2 = cross(N, sS);
+  float det = dot(sS, R1);
+  vec3 grad = sign(det) * ((sx.h - s0.h)*amp*R1 + (sy.h - s0.h)*amp*R2);
+  vec3 Np = normalize(abs(det)*N - grad);
+
+  // luz de palco: chave quente pela esquerda, recorte azul pela direita
+  vec3 L = normalize(uKeyDir), Lr = normalize(uRimDir);
+  float key0 = max(dot(N, L), 0.0), key1 = max(dot(Np, L), 0.0);
+  float detail = (0.30 + key1) / (0.30 + key0);
+  float relight = mix(1.0, (0.22 + key0) / 0.77, uLook*0.75);
+  float rimN = pow(clamp(1.0 - N.z, 0.0, 1.0), 1.5) * max(N.x, 0.0);
+  float rimP = pow(max(dot(Np, Lr), 0.0), 1.6);
+  float spec = pow(max(dot(Np, normalize(L + vec3(0.0, 0.0, 1.0))), 0.0), mix(12.0, 40.0, lp));
+  float specR = pow(max(dot(Np, normalize(Lr + vec3(0.0, 0.0, 1.0))), 0.0), 30.0);
+
+  vec3 src = texture(uVideo, vSrc).rgb;
+  vec3 srcLow = textureLod(uVideo, vSrc, 5.0).rgb;
+  vec3 base = stageGrade(src, vCuv), baseLow = stageGrade(srcLow, vCuv);
+  float ref = max(uRefLuma, 0.04);
+  float Sv = luma(base)/ref, Sl = max(luma(baseLow)/ref, 0.02);
+  float dissolve = smoothstep(0.55, 0.95, lp);
+  // traços finos da pessoa (óculos, sobrancelha, barba) sobrevivem e somem aos poucos
+  float feat = pow(clamp(Sv/Sl, 0.05, 1.1), mix(1.5, 0.25, dissolve));
+  float macro = mix(Sl, 1.0, 0.08);
+
+  // humano → cinza de couro → musgo escuro → material da máscara
+  vec3 alb = mix(vec3(0.44, 0.44, 0.41), vec3(0.34, 0.38, 0.32), smoothstep(0.50, 0.80, lp));
+  // o fim da pele já puxa para a cor da máscara que vai chegar
+  alb = mix(alb, uEndCol, smoothstep(0.82, 1.0, lp));
+  alb *= 0.86 + 0.28*s0.rM*smoothstep(0.3, 0.6, lp);
+  alb *= 0.88 + 0.24*s0.n1;
+  alb = mix(alb, alb*1.25 + 0.015, 0.4*s0.plate);
+  vec3 human = mix(base, vec3(luma(base))*vec3(1.03, 1.0, 0.9), 0.45*smoothstep(0.05, 0.45, lp));
+  vec3 col = mix(human, alb*macro*feat, smoothstep(0.30, 0.70, lp));
+  col *= relight;
+  col *= mix(1.0, detail, smoothstep(0.03, 0.25, lp));
+  col *= 1.0 - s0.cav*mix(0.55, 0.85, lp);
+  col += uRimCol * (rimN*0.35*uLook + rimP*0.22*smoothstep(0.2, 0.7, lp)) * clamp(macro, 0.3, 1.4);
+  float wet = uGloss * smoothstep(0.72, 1.0, lp) * (1.0 - s0.cav);
+  col += (uKeyCol*spec*0.45 + uRimCol*specR*0.7) * wet * clamp(macro, 0.4, 1.5);
+
+  float hd = length(vCuv*uRes - uHornBase) / max(uHornW, 1.0);
+  col *= 1.0 - 0.55*uHornGrow*smoothstep(1.6, 0.6, hd);
+
+  float eye = r0.g;
+  col = mix(col, base*relight, eye*(1.0 - smoothstep(0.70, 0.88, uP)));
+  col = mix(col, col*0.18, eye*smoothstep(0.80, 0.98, uP)*0.8);
+
+  // alfa: na borda e no anel só fica o que é pele; cabelo e fundo passam
+  float zone = max(1.0 - r0.r, vRing);
+  float a = mix(1.0, skinLik(src), zone*0.92) * (1.0 - smoothstep(0.45, 1.0, vRing));
+  o = vec4(max(col, vec3(0.0)), a);
+}`;
+
+const VS_HORN = `#version 300 es
+layout(location=0) in vec2 aTS;
+uniform vec2 uB, uC, uT, uRes; uniform float uW;
+out float vT; out float vS; out vec2 vPerp;
+vec2 bez(float t){ float a = 1.0 - t; return a*a*uB + 2.0*a*t*uC + t*t*uT; }
+vec2 bezd(float t){ return 2.0*(1.0 - t)*(uC - uB) + 2.0*t*(uT - uC); }
+void main(){
+  float t = aTS.x, s = aTS.y;
+  vec2 tg = normalize(bezd(t) + vec2(1e-5, 0.0)); vec2 pr = vec2(-tg.y, tg.x);
+  float w = uW * pow(max(1.0 - t, 0.0), 0.85) * (1.0 + 0.35*exp(-t*16.0));
+  vec2 pos = bez(t) + pr*s*w;
+  vT = t; vS = s; vPerp = pr;
+  gl_Position = vec4(pos.x/uRes.x*2.0 - 1.0, 1.0 - pos.y/uRes.y*2.0, 0.0, 1.0);
+}`;
+
+const FS_HORN = `#version 300 es
+precision highp float;
+in float vT; in float vS; in vec2 vPerp; out vec4 o;
+uniform float uAlpha, uLenPx; uniform vec3 uKeyDir, uKeyCol, uRimDir, uRimCol;
+${G_COMMON}
+void main(){
+  float s = vS, t = vT;
+  float nz = sqrt(max(1.0 - s*s, 0.0));
+  vec2 pr = vec2(vPerp.x, -vPerp.y);
+  vec3 N = normalize(vec3(pr*s*0.95, nz));
+  float Lp = t*uLenPx;
+  float fib = vnoise(vec2(s*6.0 + 13.0, Lp*0.045))*0.55 + vnoise(vec2(s*16.0, Lp*0.13))*0.30 + vnoise(vec2(s*40.0, Lp*0.4))*0.15;
+  vec3 alb = mix(vec3(0.16, 0.20, 0.21), vec3(0.30, 0.35, 0.34), fib);
+  alb = mix(alb, vec3(0.07, 0.08, 0.09), smoothstep(0.6, 1.0, t)*0.6);
+  vec3 Lk = normalize(uKeyDir), Lr = normalize(uRimDir);
+  float dif = max(dot(N, Lk), 0.0);
+  float rim = pow(max(dot(N, Lr), 0.0), 1.6);
+  float spec = pow(max(dot(N, normalize(Lk + vec3(0.0, 0.0, 1.0))), 0.0), 28.0);
+  float specR = pow(max(dot(N, normalize(Lr + vec3(0.0, 0.0, 1.0))), 0.0), 18.0);
+  vec3 col = alb*(0.18 + 1.05*dif*uKeyCol) + uRimCol*(rim*0.5 + specR*0.9)*(0.6 + 0.4*fib) + uKeyCol*spec*0.9*(0.5 + 0.5*fib);
+  // a listra laranja do chifre da máscara, no flanco esquerdo
+  float streak = exp(-pow((s + 0.5)/0.10, 2.0)) * smoothstep(0.08, 0.3, t) * (1.0 - smoothstep(0.55, 0.85, t));
+  col += vec3(1.0, 0.42, 0.10) * streak * (0.35 + 0.65*fib) * 0.7;
+  float a = (1.0 - smoothstep(0.86, 1.0, abs(s))) * smoothstep(0.0, 0.12, t) * uAlpha;
+  o = vec4(col, a);
+}`;
+
+// a máscara é uma malha: cada vértice da grade vai para onde o encaixe por âncoras mandar
+const VS_MASK = `#version 300 es
+layout(location=0) in vec2 aCorner;
+layout(location=1) in vec2 aPos;
+uniform vec2 uRes;
+out vec2 vMUV;
+void main(){ vMUV = aCorner; gl_Position = vec4(aPos.x/uRes.x*2.0 - 1.0, 1.0 - aPos.y/uRes.y*2.0, 0.0, 1.0); }`;
+
+const FS_MASK = `#version 300 es
+precision highp float;
+in vec2 vMUV; out vec4 o;
+uniform sampler2D uMask, uBake1, uVideo; uniform float uReveal, uShadow, uLook, uTint; uniform vec2 uHT, uHB;
+// furos dos olhos da máscara (uv) e o olho da pessoa que aparece de cada lado (px do canvas)
+uniform vec4 uHole0, uHole1, uEye0, uEye1, uInv; uniform vec2 uRoll, uImg; uniform float uMirror, uEyeShow, uExposure;
+${G_COMMON}
+vec2 canvasToImg(vec2 c){ float x = uMirror > 0.5 ? uInv.w - c.x : c.x; return vec2(uInv.x + x*uInv.z, uInv.y + c.y*uInv.z) / uImg; }
+// o olho de verdade dentro da órbita da máscara: ainda espia
+vec4 socket(vec4 hole, vec4 eye){
+  vec2 q = (vMUV - hole.xy) / hole.zw;
+  float r = length(q);
+  if (r > 1.25 || hole.z <= 0.0) return vec4(0.0);
+  vec2 v = vec2(q.x*eye.z, q.y*eye.w);
+  v = vec2(uRoll.x*v.x - uRoll.y*v.y, uRoll.y*v.x + uRoll.x*v.y);
+  vec3 ec = texture(uVideo, canvasToImg(eye.xy + v)).rgb * uExposure;
+  ec = pow(max(ec, vec3(0.0)), vec3(1.3)) * (1.0 - 0.65*smoothstep(0.3, 1.05, r));
+  return vec4(ec, 1.0 - smoothstep(0.95, 1.2, r));
+}
+void main(){
+  // a máscara se materializa a partir do chifre (que já está ali) e escorre pelo rosto
+  vec2 ht = uHT, hb = uHB, ax = hb - ht;
+  float hs = clamp(dot(vMUV - ht, ax) / dot(ax, ax), 0.0, 1.0);
+  float q = distance(vMUV, ht + ax*hs)*1.6 + (1.0 - hs)*0.08 + (fbm(vMUV*7.0) - 0.5)*0.28;
+  float R = uReveal*1.25;
+  float rv = smoothstep(q - 0.10, q + 0.10, R);
+  if (uShadow > 0.5){ float sa = textureLod(uMask, vMUV + vec2(0.0, -0.012), 6.0).a; o = vec4(0.0, 0.0, 0.0, sa*0.6*rv); return; }
+  vec4 m = texture(uMask, vMUV);
+  vec3 c = m.rgb / max(m.a, 1e-3);
+  float a = smoothstep(0.30, 0.80, m.a);
+  float l = dot(c, vec3(0.299, 0.587, 0.114));
+  c = mix(c, mix(vec3(l), c, 0.85), uLook);
+  c = mix(c, vec3(l)*vec3(0.86, 0.95, 1.08), uTint);
+  c = pow(max(c, vec3(0.0)), vec3(mix(1.0, 1.12, uLook)));
+  float front = smoothstep(q - 0.12, q, R) * (1.0 - smoothstep(q, q + 0.08, R));
+  c += vec3(0.50, 0.40, 1.0)*front*0.22;
+  float A = a*rv;
+  // a máscara fica por cima; o olho aparece só onde ela é furada
+  vec4 e0 = socket(uHole0, uEye0), e1 = socket(uHole1, uEye1);
+  vec4 e = e0.a > e1.a ? e0 : e1;
+  float ea = e.a * rv * uEyeShow * (1.0 - A);
+  o = vec4(c*A + e.rgb*ea, A + ea);
+}`;
+
+const FS_POST = `#version 300 es
+precision highp float;
+in vec2 vUV; out vec4 o;
+uniform sampler2D uScene; uniform float uTime, uGrain, uVig;
+${G_COMMON}
+void main(){
+  vec2 uv = vec2(vUV.x, 1.0 - vUV.y);
+  vec2 d = uv - 0.5; float r2 = dot(d, d);
+  float ca = 0.0018 + 0.004*r2;
+  vec3 c = vec3(texture(uScene, uv + d*ca).r, texture(uScene, uv).g, texture(uScene, uv - d*ca).b);
+  c *= 1.0 - uVig*smoothstep(0.08, 0.55, r2);
+  float g = hash12(gl_FragCoord.xy + fract(uTime*7.31)*917.0) - 0.5;
+  c += g*uGrain*(0.55 + 0.45*(1.0 - luma(c)));
+  o = vec4(c, 1.0);
+}`;
+
+// ============================================================
+// WebGL
+// ============================================================
+let P = {}, T = {}, B = {}, FB = {};
+
+function compile(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    const log = gl.getShaderInfoLog(s);
+    console.error(log + '\n' + src.split('\n').map((l, i) => (i + 1) + ': ' + l).join('\n'));
+    throw new Error('Shader: ' + log);
+  }
+  return s;
+}
+function program(vs, fs) {
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl.VERTEX_SHADER, vs)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('Link: ' + gl.getProgramInfoLog(p));
+  const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const info = gl.getActiveUniform(p, i); u[info.name] = gl.getUniformLocation(p, info.name); }
+  return { p, u };
+}
+function makeTex(w, h, { internal = gl.RGBA8, format = gl.RGBA, type = gl.UNSIGNED_BYTE, data = null, mip = false } = {}) {
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, type, data);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, mip ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return t;
+}
+function bindTex(unit, tex, prog, name) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(prog.u[name], unit); }
+
+function initGL() {
+  if (!gl) throw new Error('Este navegador não tem WebGL2.');
+  P.bake = program(VS_QUAD, FS_BAKE);
+  P.bg = program(VS_QUAD, FS_BG);
+  P.face = program(VS_FACE, FS_FACE);
+  P.horn = program(VS_HORN, FS_HORN);
+  P.mask = program(VS_MASK, FS_MASK);
+  P.post = program(VS_QUAD, FS_POST);
+
+  // quad de tela cheia
+  B.quadVAO = gl.createVertexArray(); gl.bindVertexArray(B.quadVAO);
+  const qb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, qb);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+  // malha do rosto: buffer dinâmico (pos, src, normal) + uv estático
+  B.faceVAO = gl.createVertexArray(); gl.bindVertexArray(B.faceVAO);
+  B.faceData = new Float32Array(NVX * 8);
+  B.faceVBO = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, B.faceVBO);
+  gl.bufferData(gl.ARRAY_BUFFER, B.faceData.byteLength, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 32, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 32, 12);
+  gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 32, 20);
+  const uvb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, uvb); gl.bufferData(gl.ARRAY_BUFFER, UVX, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 2, gl.FLOAT, false, 0, 0);
+  const rb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, rb); gl.bufferData(gl.ARRAY_BUFFER, RINGF, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 1, gl.FLOAT, false, 0, 0);
+  const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, TRIX, gl.STATIC_DRAW);
+
+  // chifre: tira ao longo do eixo
+  const NT = 48, hornTS = [];
+  for (let i = 0; i <= NT; i++) { const t = i / NT; hornTS.push(t, -1, t, 1); }
+  B.hornN = (NT + 1) * 2;
+  B.hornVAO = gl.createVertexArray(); gl.bindVertexArray(B.hornVAO);
+  const hb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, hb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(hornTS), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+  // grade da máscara: uv fixo + posição recalculada a cada quadro
+  B.maskVAO = gl.createVertexArray(); gl.bindVertexArray(B.maskVAO);
+  const muv = new Float32Array(MGX * MGY * 2), mid = [];
+  for (let j = 0; j < MGY; j++) for (let i = 0; i < MGX; i++) { muv[(j * MGX + i) * 2] = i / (MGX - 1); muv[(j * MGX + i) * 2 + 1] = j / (MGY - 1); }
+  for (let j = 0; j < MGY - 1; j++) for (let i = 0; i < MGX - 1; i++) { const a = j * MGX + i, b = a + 1, c = a + MGX, d = c + 1; mid.push(a, b, c, b, d, c); }
+  const mb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, mb); gl.bufferData(gl.ARRAY_BUFFER, muv, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  B.maskPos = new Float32Array(MGX * MGY * 2);
+  B.maskPosVBO = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, B.maskPosVBO); gl.bufferData(gl.ARRAY_BUFFER, B.maskPos.byteLength, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+  const mib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(mid), gl.STATIC_DRAW);
+  B.maskN = mid.length;
+  gl.bindVertexArray(null);
+
+  T.video = makeTex(2, 2, { mip: true });
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  T.seg = makeTex(1, 1, { internal: gl.R8, format: gl.RED, data: new Uint8Array([255]) });
+  bake();
+  T.reg0 = null; T.reg1 = null; buildRegions();
+  resizeTargets();
+}
+
+function drawQuad() { gl.bindVertexArray(B.quadVAO); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+
+function bake() {
+  const size = (!isMobile && gl.getParameter(gl.MAX_TEXTURE_SIZE) >= 4096) ? 2048 : 1024;
+  const fb = gl.createFramebuffer();
+  T.bake0 = makeTex(size, size, { mip: true }); T.bake1 = makeTex(size, size, { mip: true });
+  [[0, T.bake0], [1, T.bake1]].forEach(([mode, tex]) => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    gl.viewport(0, 0, size, size); gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST);
+    gl.useProgram(P.bake.p); gl.uniform1f(P.bake.u.uSize, size); gl.uniform1i(P.bake.u.uMode, mode);
+    const strips = 4;
+    gl.enable(gl.SCISSOR_TEST);
+    for (let k = 0; k < strips; k++) { gl.scissor(0, (size / strips) * k, size, size / strips); drawQuad(); }
+    gl.disable(gl.SCISSOR_TEST);
+    gl.bindTexture(gl.TEXTURE_2D, tex); gl.generateMipmap(gl.TEXTURE_2D);
+    // o anel amostra fora de [0,1]: espelhar evita costura
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+  });
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.deleteFramebuffer(fb);
+}
+
+// máscaras de região desenhadas no layout UV do rosto
+function buildRegions() {
+  const N = 512;
+  const c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d', { willReadFrequently: true });
+  const uvPt = i => [UV[i * 2] * N, UV[i * 2 + 1] * N];
+  const layer = (draw, blur) => {
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = '#000'; x.fillRect(0, 0, N, N);
+    x.fillStyle = '#fff'; x.strokeStyle = '#fff'; draw();
+    const d = x.getImageData(0, 0, N, N).data; let f = new Float32Array(N * N);
+    for (let i = 0; i < N * N; i++) f[i] = d[i * 4] / 255;
+    for (let k = 0; k < 3 && blur > 0; k++) f = boxBlur(f, N, N, blur);
+    return f;
+  };
+  const poly = (idx, grow = 1) => {
+    let cx = 0, cy = 0; idx.forEach(i => { const [a, b] = uvPt(i); cx += a; cy += b; }); cx /= idx.length; cy /= idx.length;
+    x.beginPath(); idx.forEach((i, k) => { const [a, b] = uvPt(i); const px = cx + (a - cx) * grow, py = cy + (b - cy) * grow; k ? x.lineTo(px, py) : x.moveTo(px, py); }); x.closePath(); x.fill();
+  };
+  const ell = (i0, i1, rx, ry, cyOff = 0) => {
+    const [a, b] = uvPt(i0), [c2, d2] = uvPt(i1);
+    x.beginPath(); x.ellipse((a + c2) / 2, (b + d2) / 2 + cyOff * N, rx * N, ry * N, 0, 0, Math.PI * 2); x.fill();
+  };
+  const face = layer(() => poly(FACE_OVAL, 0.93), 9);
+  const eyes = layer(() => { poly(EYE_R, 1.08); poly(EYE_L, 1.08); }, 2);
+  const lips = layer(() => poly(LIPS, 1.05), 3);
+  const brows = layer(() => { poly(BROW_R, 1.25); poly(BROW_L, 1.25); }, 4);
+  const glass = layer(() => { ell(33, 133, 0.105, 0.075, 0.004); ell(263, 362, 0.105, 0.075, 0.004); }, 8);
+  const nose = layer(() => { const [a, b] = uvPt(168), [c2, d2] = uvPt(4); x.beginPath(); x.ellipse((a + c2) / 2, (b + d2) / 2, 0.075 * N, Math.abs(d2 - b) * 0.62, 0, 0, Math.PI * 2); x.fill(); }, 10);
+  const pack = (a, b, cc, d) => { const u8 = new Uint8Array(N * N * 4); for (let i = 0; i < N * N; i++) { u8[i * 4] = a[i] * 255; u8[i * 4 + 1] = b[i] * 255; u8[i * 4 + 2] = cc[i] * 255; u8[i * 4 + 3] = d[i] * 255; } return u8; };
+  T.reg0 = makeTex(N, N, { data: pack(face, eyes, lips, brows) });
+  T.reg1 = makeTex(N, N, { data: pack(glass, nose, new Float32Array(N * N), new Float32Array(N * N)) });
+}
+function boxBlur(src, w, h, r) {
+  const tmp = new Float32Array(w * h), out2 = new Float32Array(w * h), n = 2 * r + 1;
+  for (let y = 0; y < h; y++) {
+    const row = y * w; let acc = 0;
+    for (let k = -r; k <= r; k++) acc += src[row + clamp(k, 0, w - 1)];
+    for (let xx = 0; xx < w; xx++) { tmp[row + xx] = acc / n; acc += src[row + Math.min(w - 1, xx + r + 1)] - src[row + Math.max(0, xx - r)]; }
+  }
+  for (let xx = 0; xx < w; xx++) {
+    let acc = 0;
+    for (let k = -r; k <= r; k++) acc += tmp[clamp(k, 0, h - 1) * w + xx];
+    for (let y = 0; y < h; y++) { out2[y * w + xx] = acc / n; acc += tmp[Math.min(h - 1, y + r + 1) * w + xx] - tmp[Math.max(0, y - r) * w + xx]; }
+  }
+  return out2;
+}
+
+function resizeTargets() {
+  const [W, H] = outSize();
+  out.width = W; out.height = H; glCanvas.width = W; glCanvas.height = H;
+  $('stage').classList.toggle('feed', params.format === 'feed');
+  if (FB.scene) { gl.deleteFramebuffer(FB.scene); gl.deleteTexture(T.scene); gl.deleteRenderbuffer(FB.depth); }
+  T.scene = makeTex(W, H);
+  FB.depth = gl.createRenderbuffer(); gl.bindRenderbuffer(gl.RENDERBUFFER, FB.depth);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, W, H);
+  FB.scene = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, FB.scene);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, T.scene, 0);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, FB.depth);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  S.crop = null;
+}
+
+function loadMaskTex() {
+  return Promise.all(Object.values(MASKS).map(loadOneMask)).then(() => { T.mask = MASK.tex; });
+}
+function loadOneMask(mk) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      mk.tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, mk.tex);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      res();
+    };
+    img.onerror = rej; img.src = mk.src;
+  });
+}
+function useMask(kind) {
+  if (!MASKS[kind]) return;
+  MASK = MASKS[kind]; T.mask = MASK.tex;
+  params.maskKind = kind; params.maskScale = MASK.scale ?? 1; params.maskLift = MASK.lift ?? 0;
+  syncPanel();
+}
+
+function uploadSource(src) {
+  gl.bindTexture(gl.TEXTURE_2D, T.video);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+  gl.generateMipmap(gl.TEXTURE_2D);
+}
+function uploadSeg() {
+  if (!S.seg) return;
+  gl.bindTexture(gl.TEXTURE_2D, T.seg);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, S.segW, S.segH, 0, gl.RED, gl.UNSIGNED_BYTE, S.seg);
+  S.segDirty = false;
+}
+
+// ============================================================
+// Geometria por quadro: enquadramento, deformação, normais
+// ============================================================
+const PC = new Float32Array(NL * 3);   // pontos no canvas (px), z para o espectador
+const W8 = { nose: new Float32Array(NV), eyeR: new Float32Array(NV), eyeL: new Float32Array(NV), brow: new Float32Array(NV), jaw: new Float32Array(NV) };
+(function vertexWeights() {
+  const u = i => UV[i * 2], v = i => UV[i * 2 + 1];
+  const ellW = (i, cx, cy, rx, ry) => { const d = ((u(i) - cx) / rx) ** 2 + ((v(i) - cy) / ry) ** 2; return d >= 1 ? 0 : (1 - d) * (1 - d); };
+  const mid = (a, b) => [(u(a) + u(b)) / 2, (v(a) + v(b)) / 2];
+  const nC = [u(4), (v(168) + v(4)) / 2 + 0.03], eR = mid(33, 133), eL = mid(263, 362);
+  const bR = [(u(70) + u(107)) / 2, (v(105) + v(52)) / 2], bL = [(u(300) + u(336)) / 2, (v(334) + v(282)) / 2];
+  for (let i = 0; i < NV; i++) {
+    W8.nose[i] = ellW(i, nC[0], nC[1], 0.13, 0.17);
+    W8.eyeR[i] = ellW(i, eR[0], eR[1], 0.115, 0.085);
+    W8.eyeL[i] = ellW(i, eL[0], eL[1], 0.115, 0.085);
+    W8.brow[i] = Math.max(ellW(i, bR[0], bR[1], 0.13, 0.06), ellW(i, bL[0], bL[1], 0.13, 0.06));
+    W8.jaw[i] = smooth(0.62, 0.92, v(i)) * smooth(0.05, 0.3, Math.abs(u(i) - 0.5));
+  }
+})();
+
+const pt = i => ({ x: PC[i * 3], y: PC[i * 3 + 1] });
+function targetCrop() {
+  const [W, H] = [out.width, out.height], iw = S.iw, ih = S.ih;
+  const cover = Math.max(W / iw, H / ih);
+  if (!S.lm) return { x0: (iw - W / cover) / 2, y0: (ih - H / cover) / 2, s: cover };
+  const L = S.lm, F = FRAMING[params.format];
+  const fx = (L[30] + L[456]) / 2, fy = (L[31] + L[457]) / 2;
+  const fh = Math.hypot(L[30] - L[456], L[31] - L[457]);
+  let s = clamp((H * F.faceFrac) / Math.max(fh, 1), cover, cover * 5);
+  // no fim a câmera recua: a máscara inteira (chifre e orelhas) precisa caber no quadro
+  const pull = smooth(0.80, 0.92, S.p);
+  if (pull > 0) { const sFit = Math.max(Math.min(s, (H * 0.34) / Math.max(fh, 1)), cover * 0.7); s = Math.exp(lerp(Math.log(s), Math.log(sFit), pull)); }
+  const cw = W / s, ch = H / s;
+  let x0 = fx - cw * 0.5, y0 = fy - ch * F.faceY;
+  x0 = cw > iw ? (iw - cw) / 2 : clamp(x0, 0, iw - cw);
+  y0 = ch > ih ? clamp(y0, ih - ch, 0) : clamp(y0, 0, ih - ch);
+  return { x0, y0, s };
+}
+function updateCrop(instant) {
+  const t = targetCrop();
+  if (!S.crop || instant) { S.crop = t; return; }
+  const k = 0.07;
+  S.crop = { x0: lerp(S.crop.x0, t.x0, k), y0: lerp(S.crop.y0, t.y0, k), s: Math.exp(lerp(Math.log(S.crop.s), Math.log(t.s), k)) };
+}
+function projectLandmarks() {
+  const { x0, y0, s } = S.crop, W = out.width, L = S.lm;
+  for (let i = 0; i < NL; i++) {
+    let x = (L[i * 3] - x0) * s; const y = (L[i * 3 + 1] - y0) * s;
+    if (params.mirror) x = W - x;
+    PC[i * 3] = x; PC[i * 3 + 1] = y; PC[i * 3 + 2] = -L[i * 3 + 2] * s;
+  }
+}
+function faceFrame() {
+  const a = pt(10), b = pt(152);
+  const fh = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+  const U = { x: (a.x - b.x) / fh, y: (a.y - b.y) / fh };
+  return { U, R: { x: -U.y, y: U.x }, fh, C: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+}
+
+const DEF = new Float32Array(NVX * 3);
+function buildFace(p) {
+  const fr = faceFrame(), { U, R, fh, C } = fr, k = params.deform;
+  const cn = pt(4);
+  const eyes = [[EYE_R, W8.eyeR, 33, 133], [EYE_L, W8.eyeL, 263, 362]].map(([, w, a, b]) => ({ w, c: { x: (PC[a * 3] + PC[b * 3]) / 2, y: (PC[a * 3 + 1] + PC[b * 3 + 1]) / 2 } }));
+  const aNose = 0.22 * smooth(0.45, 0.85, p) * k, aDown = 0.025 * smooth(0.55, 0.9, p) * k;
+  const close = 0.66 * smooth(0.60, 0.92, p) * k, aBrow = 0.02 * smooth(0.5, 0.9, p) * k, aJaw = 0.04 * smooth(0.5, 0.95, p) * k;
+  for (let i = 0; i < NV; i++) {
+    const x = PC[i * 3], y = PC[i * 3 + 1];
+    let dx = 0, dy = 0;
+    const wn = W8.nose[i];
+    if (wn > 0) { dx += (x - cn.x) * aNose * wn - U.x * fh * aDown * wn; dy += (y - cn.y) * aNose * wn - U.y * fh * aDown * wn; }
+    for (const e of eyes) {
+      const w = e.w[i]; if (w <= 0) continue;
+      const d = (x - e.c.x) * U.x + (y - e.c.y) * U.y;
+      const kk = -d * close * w * (d > 0 ? 1 : 0.35);
+      dx += U.x * kk; dy += U.y * kk;
+    }
+    const wb = W8.brow[i]; if (wb > 0) { dx -= U.x * fh * aBrow * wb; dy -= U.y * fh * aBrow * wb; }
+    const wj = W8.jaw[i]; if (wj > 0) { const r = (x - C.x) * R.x + (y - C.y) * R.y; dx += R.x * r * aJaw * wj; dy += R.y * r * aJaw * wj; }
+    DEF[i * 3] = x + dx; DEF[i * 3 + 1] = y + dy; DEF[i * 3 + 2] = PC[i * 3 + 2];
+  }
+  for (let j = 0; j < NR; j++) {
+    const i = FACE_OVAL[j], kk = RING_K[j];
+    DEF[(NV + j) * 3] = C.x + (DEF[i * 3] - C.x) * kk; DEF[(NV + j) * 3 + 1] = C.y + (DEF[i * 3 + 1] - C.y) * kk; DEF[(NV + j) * 3 + 2] = DEF[i * 3 + 2];
+  }
+  // normais no referencial y-para-cima, z para o espectador
+  const nrm = new Float32Array(NVX * 3);
+  for (let t = 0; t < TRIX.length; t += 3) {
+    const a = TRIX[t], b = TRIX[t + 1], c = TRIX[t + 2];
+    const ax = DEF[a * 3], ay = -DEF[a * 3 + 1], az = DEF[a * 3 + 2];
+    const e1x = DEF[b * 3] - ax, e1y = -DEF[b * 3 + 1] - ay, e1z = DEF[b * 3 + 2] - az;
+    const e2x = DEF[c * 3] - ax, e2y = -DEF[c * 3 + 1] - ay, e2z = DEF[c * 3 + 2] - az;
+    let nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz = e1x * e2y - e1y * e2x;
+    if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
+    for (const v of [a, b, c]) { nrm[v * 3] += nx; nrm[v * 3 + 1] += ny; nrm[v * 3 + 2] += nz; }
+  }
+  const d = B.faceData, L = S.lm, { x0, y0, s } = S.crop, W = out.width;
+  for (let i = 0; i < NVX; i++) {
+    const nx = nrm[i * 3], ny = nrm[i * 3 + 1], nz = nrm[i * 3 + 2], l = Math.hypot(nx, ny, nz) || 1;
+    d[i * 8] = DEF[i * 3]; d[i * 8 + 1] = DEF[i * 3 + 1]; d[i * 8 + 2] = DEF[i * 3 + 2];
+    if (i < NV) { d[i * 8 + 3] = L[i * 3] / S.iw; d[i * 8 + 4] = L[i * 3 + 1] / S.ih; }
+    else {
+      // o anel não deforma: amostra a imagem exatamente onde está
+      const xi = params.mirror ? W - DEF[i * 3] : DEF[i * 3];
+      d[i * 8 + 3] = (x0 + xi / s) / S.iw; d[i * 8 + 4] = (y0 + DEF[i * 3 + 1] / s) / S.ih;
+    }
+    d[i * 8 + 5] = nx / l; d[i * 8 + 6] = ny / l; d[i * 8 + 7] = nz / l;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, B.faceVBO); gl.bufferSubData(gl.ARRAY_BUFFER, 0, d);
+  return fr;
+}
+
+// pontos do rosto que puxam cada âncora da máscara frontal
+const FIT_LM = { top: [10], chin: [152], eyeR: [33, 133], eyeL: [263, 362], sideR: [234], sideL: [454], jawR: [172], jawL: [397], nose: [4] };
+function fitSimilarity(src, dst) {
+  const n = src.length; let sx = 0, sy = 0, dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) { sx += src[i][0]; sy += src[i][1]; dx += dst[i][0]; dy += dst[i][1]; }
+  sx /= n; sy /= n; dx /= n; dy /= n;
+  let a = 0, b = 0, d = 0;
+  for (let i = 0; i < n; i++) { const px = src[i][0] - sx, py = src[i][1] - sy, qx = dst[i][0] - dx, qy = dst[i][1] - dy; a += px * qx + py * qy; b += px * qy - py * qx; d += px * px + py * py; }
+  const kr = a / d, ki = b / d;
+  return { f: (x, y) => { const px = x - sx, py = y - sy; return [dx + kr * px - ki * py, dy + ki * px + kr * py]; }, scale: Math.hypot(kr, ki) };
+}
+function solveLinear(A, b) {
+  const n = b.length;
+  for (let c = 0; c < n; c++) {
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    const dd = A[c][c] || 1e-12;
+    for (let r = c + 1; r < n; r++) { const k = A[r][c] / dd; if (!k) continue; for (let q = c; q < n; q++) A[r][q] -= k * A[c][q]; b[r] -= k * b[c]; }
+  }
+  const x = new Float64Array(n);
+  for (let r = n - 1; r >= 0; r--) { let s = b[r]; for (let q = r + 1; q < n; q++) s -= A[r][q] * x[q]; x[r] = s / (A[r][r] || 1e-12); }
+  return x;
+}
+// thin-plate spline: deforma a máscara passando (quase) pelas âncoras, sem dobras
+function fitTPS(src, dst, lambda) {
+  const n = src.length, N = n + 3, Uk = r2 => (r2 < 1e-12 ? 0 : r2 * Math.log(r2));
+  const A = Array.from({ length: N }, () => new Float64Array(N)), bx = new Float64Array(N), by = new Float64Array(N);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) { const dx = src[i][0] - src[j][0], dy = src[i][1] - src[j][1]; A[i][j] = Uk(dx * dx + dy * dy); }
+    A[i][i] += lambda;
+    A[i][n] = A[n][i] = 1; A[i][n + 1] = A[n + 1][i] = src[i][0]; A[i][n + 2] = A[n + 2][i] = src[i][1];
+    bx[i] = dst[i][0]; by[i] = dst[i][1];
+  }
+  const wx = solveLinear(A.map(r => Float64Array.from(r)), bx), wy = solveLinear(A.map(r => Float64Array.from(r)), by);
+  return (x, y) => {
+    let fx = wx[n] + wx[n + 1] * x + wx[n + 2] * y, fy = wy[n] + wy[n + 1] * x + wy[n + 2] * y;
+    for (let i = 0; i < n; i++) { const dx = x - src[i][0], dy = y - src[i][1], u = Uk(dx * dx + dy * dy); fx += wx[i] * u; fy += wy[i] * u; }
+    return [fx, fy];
+  };
+}
+function maskTransform(fr) {
+  return MASK.anchors ? maskTransformFrontal(fr) : maskTransformSimilar(fr);
+}
+function maskTransformFrontal(fr) {
+  const { U, fh, C } = fr, M = MASK.h;
+  // espelhado, o olho direito da pessoa aparece à direita: troca os lados
+  const swap = pt(33).x > pt(263).x;
+  const side = n => (!swap ? n : n.endsWith('R') ? n.slice(0, -1) + 'L' : n.endsWith('L') ? n.slice(0, -1) + 'R' : n);
+  const src = [], dst = [];
+  for (const [name, a] of Object.entries(MASK.anchors)) {
+    const lm = FIT_LM[side(name)]; if (!lm) continue;
+    let x = 0, y = 0; lm.forEach(i => { x += PC[i * 3]; y += PC[i * 3 + 1]; }); x /= lm.length; y /= lm.length;
+    if (name === 'top') { const k = 0.06 + params.maskLift; x += U.x * fh * k; y += U.y * fh * k; }
+    if (name === 'chin') { x -= U.x * fh * 0.02; y -= U.y * fh * 0.02; }
+    src.push([a[0] / M, a[1] / M]); dst.push([(x - C.x) / fh, (y - C.y) / fh]);
+  }
+  // pontos rígidos (orelhas, ponta do chifre, bordas) seguem só a semelhança: não entortam
+  const sim = fitSimilarity(src, dst);
+  for (const r of MASK.rigid || []) { const s = [r[0] / M, r[1] / M]; src.push(s); dst.push(sim.f(s[0], s[1])); }
+  const tps = fitTPS(src, dst, 2e-3), sc = params.maskScale;
+  const f = (X, Y) => { const q = tps(X / M, Y / M); return { x: C.x + q[0] * fh * sc, y: C.y + q[1] * fh * sc }; };
+  return { f, scale: sim.scale * fh / M * sc };
+}
+// máscara em 3/4: semelhança (escala + rotação) pelo eixo queixo → topo da cabeça
+function maskTransformSimilar(fr) {
+  const { U, fh, C } = fr;
+  const chin = pt(152), top = pt(10);
+  const a = { x: chin.x - U.x * fh * 0.03, y: chin.y - U.y * fh * 0.03 };
+  const lift = 0.10 + params.maskLift;
+  const b = { x: top.x + U.x * fh * lift, y: top.y + U.y * fh * lift };
+  const A = { x: MASK.chin[0], y: MASK.chin[1] }, Bm = { x: MASK.top[0], y: MASK.top[1] };
+  const mx = Bm.x - A.x, my = Bm.y - A.y, den = mx * mx + my * my;
+  const tx = b.x - a.x, ty = b.y - a.y;
+  const kr = (tx * mx + ty * my) / den, ki = (ty * mx - tx * my) / den;
+  const sc = params.maskScale;
+  const f = (X, Y) => { const dx = X - A.x, dy = Y - A.y; const px = a.x + kr * dx - ki * dy, py = a.y + ki * dx + kr * dy; return { x: C.x + (px - C.x) * sc, y: C.y + (py - C.y) * sc }; };
+  return { f, scale: Math.hypot(kr, ki) * sc };
+}
+
+// ============================================================
+// Render
+// ============================================================
+const KEY_DIR = [-0.35, 0.75, 0.55], KEY_COL = [1.0, 0.86, 0.68], RIM_DIR = [0.95, 0.1, -0.1], RIM_COL = [0.42, 0.40, 1.0];
+let lastRender = { fr: null, mt: null };
+
+function renderScene(now) {
+  const W = out.width, H = out.height;
+  const p = S.p;
+  let fr = null, mt = null;
+  if (S.lm && S.iw) {
+    projectLandmarks();
+    if (S.hasFace) { fr = buildFace(p); mt = maskTransform(fr); }
+  }
+  const faceC = fr ? { x: fr.C.x / W, y: fr.C.y / H } : { x: 0.5, y: 0.45 }, faceH = fr ? fr.fh / H : 0.3;
+  if (S.segDirty) uploadSeg();
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, FB.scene);
+  gl.viewport(0, 0, W, H);
+  gl.clearColor(0, 0, 0, 1); gl.clearDepth(1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+
+  const { x0, y0, s } = S.crop;
+  const setGrade = pr => { gl.uniform2f(pr.u.uFaceC, faceC.x, faceC.y); gl.uniform1f(pr.u.uFaceH, faceH); gl.uniform1f(pr.u.uAspect, W / H); gl.uniform1f(pr.u.uLook, params.look); gl.uniform1f(pr.u.uExposure, S.exposure); };
+
+  gl.useProgram(P.bg.p);
+  bindTex(0, T.video, P.bg, 'uVideo'); bindTex(1, T.seg, P.bg, 'uSeg');
+  gl.uniform4f(P.bg.u.uCrop, x0 / S.iw, y0 / S.ih, (W / s) / S.iw, (H / s) / S.ih);
+  gl.uniform1f(P.bg.u.uMirror, params.mirror ? 1 : 0);
+  gl.uniform1f(P.bg.u.uSegOK, S.segOK ? 1 : 0); gl.uniform1f(P.bg.u.uSegInvert, S.segInvert ? 1 : 0);
+  gl.uniform1f(P.bg.u.uKeepBg, params.keepBg ? 1 : 0); gl.uniform3fv(P.bg.u.uRimCol, RIM_COL);
+  setGrade(P.bg); drawQuad();
+
+  let hornGrow = 0, horn = null;
+  if (fr) {
+    const hb = mt.f(MASK.hornBase[0], MASK.hornBase[1]), ht0 = mt.f(MASK.hornTip[0], MASK.hornTip[1]);
+    const ht = { x: hb.x + (ht0.x - hb.x) * params.hornScale, y: hb.y + (ht0.y - hb.y) * params.hornScale };
+    hornGrow = Math.pow(smooth(0.58, 0.92, p), 1.15);
+    const halfW = MASK.hornHalfWidth * mt.scale * Math.sqrt(params.hornScale) * (0.45 + 0.55 * smooth(0.56, 0.8, p));
+    horn = { hb, ht, halfW };
+
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(P.face.p);
+    bindTex(0, T.video, P.face, 'uVideo'); bindTex(1, T.bake0, P.face, 'uBake0'); bindTex(2, T.bake1, P.face, 'uBake1');
+    bindTex(3, T.reg0, P.face, 'uReg0'); bindTex(4, T.reg1, P.face, 'uReg1');
+    gl.uniform2f(P.face.u.uRes, W, H); gl.uniform1f(P.face.u.uP, p);
+    gl.uniform1f(P.face.u.uRefLuma, S.refLuma); gl.uniform1f(P.face.u.uFacePx, fr.fh);
+    gl.uniform1f(P.face.u.uRelief, params.relief); gl.uniform1f(P.face.u.uGloss, params.gloss);
+    gl.uniform3fv(P.face.u.uKeyDir, KEY_DIR); gl.uniform3fv(P.face.u.uKeyCol, KEY_COL);
+    gl.uniform3fv(P.face.u.uRimDir, RIM_DIR); gl.uniform3fv(P.face.u.uRimCol, RIM_COL);
+    gl.uniform2f(P.face.u.uHornBase, hb.x, hb.y); gl.uniform1f(P.face.u.uHornW, halfW); gl.uniform1f(P.face.u.uHornGrow, smooth(0.5, 0.7, p));
+    gl.uniform3fv(P.face.u.uSkin, S.skin || [0.6, 0.45, 0.38]);
+    gl.uniform3fv(P.face.u.uEndCol, MASK.endCol || [0.14, 0.18, 0.19]);
+    setGrade(P.face);
+    gl.bindVertexArray(B.faceVAO); gl.drawElements(gl.TRIANGLES, TRIX.length, gl.UNSIGNED_SHORT, 0);
+    gl.disable(gl.DEPTH_TEST);
+
+    if (hornGrow > 0.001) {
+      const tip = { x: horn.hb.x + (horn.ht.x - horn.hb.x) * hornGrow, y: horn.hb.y + (horn.ht.y - horn.hb.y) * hornGrow };
+      const len = Math.hypot(tip.x - hb.x, tip.y - hb.y);
+      const ax = (tip.x - hb.x) / (len || 1), ay = (tip.y - hb.y) / (len || 1);
+      const ctrl = { x: (hb.x + tip.x) / 2 - ay * len * 0.04, y: (hb.y + tip.y) / 2 + ax * len * 0.04 };
+      gl.useProgram(P.horn.p);
+      gl.uniform2f(P.horn.u.uB, hb.x, hb.y); gl.uniform2f(P.horn.u.uC, ctrl.x, ctrl.y); gl.uniform2f(P.horn.u.uT, tip.x, tip.y);
+      gl.uniform2f(P.horn.u.uRes, W, H); gl.uniform1f(P.horn.u.uW, halfW);
+      gl.uniform1f(P.horn.u.uAlpha, smooth(0.0, 0.08, hornGrow)); gl.uniform1f(P.horn.u.uLenPx, len);
+      gl.uniform3fv(P.horn.u.uKeyDir, KEY_DIR); gl.uniform3fv(P.horn.u.uKeyCol, KEY_COL);
+      gl.uniform3fv(P.horn.u.uRimDir, RIM_DIR); gl.uniform3fv(P.horn.u.uRimCol, RIM_COL);
+      gl.bindVertexArray(B.hornVAO); gl.drawArrays(gl.TRIANGLE_STRIP, 0, B.hornN);
+    }
+
+    const reveal = smooth(0.86, 0.995, p);
+    if (reveal > 0.001 && T.mask) {
+      for (let j = 0, k = 0; j < MGY; j++) for (let i = 0; i < MGX; i++, k += 2) {
+        const q = mt.f(i / (MGX - 1) * MASK.w, j / (MGY - 1) * MASK.h); B.maskPos[k] = q.x; B.maskPos[k + 1] = q.y;
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, B.maskPosVBO); gl.bufferSubData(gl.ARRAY_BUFFER, 0, B.maskPos);
+      gl.useProgram(P.mask.p);
+      bindTex(0, T.mask, P.mask, 'uMask'); bindTex(1, T.bake1, P.mask, 'uBake1');
+      gl.uniform2f(P.mask.u.uRes, W, H); gl.uniform1f(P.mask.u.uReveal, reveal); gl.uniform1f(P.mask.u.uLook, params.look);
+      gl.uniform1f(P.mask.u.uTint, MASK.tint || 0);
+      // olhos da pessoa para as órbitas: o da esquerda da tela vai no furo da esquerda
+      const holes = MASK.holes || [];
+      const eyeC = (a, b) => { const A = pt(a), Bp = pt(b), hw = Math.hypot(Bp.x - A.x, Bp.y - A.y) * 0.5 * 1.35; return [(A.x + Bp.x) / 2, (A.y + Bp.y) / 2, hw, hw * 0.62]; };
+      let eL = eyeC(33, 133), eR = eyeC(263, 362);
+      if (eL[0] > eR[0]) [eL, eR] = [eR, eL];
+      const hole = h => h ? [h[0] / MASK.w, h[1] / MASK.h, h[2] / MASK.w, h[3] / MASK.h] : [0, 0, 0, 0];
+      gl.uniform4fv(P.mask.u.uHole0, hole(holes[0])); gl.uniform4fv(P.mask.u.uHole1, hole(holes[1]));
+      gl.uniform4fv(P.mask.u.uEye0, eL); gl.uniform4fv(P.mask.u.uEye1, eR);
+      const ang = Math.atan2(eR[1] - eL[1], eR[0] - eL[0]);
+      gl.uniform2f(P.mask.u.uRoll, Math.cos(ang), Math.sin(ang));
+      gl.uniform4f(P.mask.u.uInv, x0, y0, 1 / s, W); gl.uniform2f(P.mask.u.uImg, S.iw, S.ih);
+      gl.uniform1f(P.mask.u.uMirror, params.mirror ? 1 : 0); gl.uniform1f(P.mask.u.uExposure, S.exposure);
+      gl.uniform1f(P.mask.u.uEyeShow, holes.length ? 1 : 0);
+      bindTex(2, T.video, P.mask, 'uVideo');
+      gl.uniform2f(P.mask.u.uHT, MASK.hornTip[0] / MASK.w, MASK.hornTip[1] / MASK.h);
+      gl.uniform2f(P.mask.u.uHB, MASK.hornBase[0] / MASK.w, MASK.hornBase[1] / MASK.h);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.bindVertexArray(B.maskVAO);
+      gl.uniform1f(P.mask.u.uShadow, 1); gl.drawElements(gl.TRIANGLES, B.maskN, gl.UNSIGNED_SHORT, 0);
+      gl.uniform1f(P.mask.u.uShadow, 0); gl.drawElements(gl.TRIANGLES, B.maskN, gl.UNSIGNED_SHORT, 0);
+    }
+    gl.disable(gl.BLEND);
+  }
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, H);
+  gl.useProgram(P.post.p);
+  bindTex(0, T.scene, P.post, 'uScene');
+  gl.uniform1f(P.post.u.uTime, now / 1000); gl.uniform1f(P.post.u.uGrain, params.grain); gl.uniform1f(P.post.u.uVig, 0.55 * params.look + 0.15);
+  drawQuad();
+  gl.bindVertexArray(null);
+  lastRender = { fr, mt };
+}
+
+// ============================================================
+// Tipografia e HUD (canvas 2D sobre o WebGL)
+// ============================================================
+const EDGES = (() => { const set = new Set(), e = []; for (let t = 0; t < TRI.length; t += 3) for (const [a, b] of [[TRI[t], TRI[t + 1]], [TRI[t + 1], TRI[t + 2]], [TRI[t + 2], TRI[t]]]) { const k = a < b ? a * 1000 + b : b * 1000 + a; if (!set.has(k)) { set.add(k); e.push(a, b); } } return e; })();
+function spaced(ctx, text, x, y, sp, align = 'left') {
+  const chars = [...text]; const ws = chars.map(c => ctx.measureText(c).width);
+  const total = ws.reduce((a, b) => a + b, 0) + sp * (chars.length - 1);
+  let cx = align === 'right' ? x - total : align === 'center' ? x - total / 2 : x;
+  const prev = ctx.textAlign; ctx.textAlign = 'left';
+  chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += ws[i] + sp; });
+  ctx.textAlign = prev; return total;
+}
+function feedMinutes(p) {
+  for (let i = 0; i < FEED.length - 1; i++) { const a = FEED[i], b = FEED[i + 1]; if (p <= b.p) { const t = (p - a.p) / (b.p - a.p); return Math.exp(Math.log(a.min) + t * (Math.log(b.min) - Math.log(a.min))); } }
+  return FEED[FEED.length - 1].min;
+}
+function feedLabel(p) {
+  const m = feedMinutes(p), pl = (n, s, sp) => `${n} ${n === 1 ? s : sp}`;
+  if (p >= 0.999) return '1 ANO DE FEED';
+  if (m < 59.5) return pl(Math.max(1, Math.round(m)), 'MINUTO', 'MINUTOS') + ' DE FEED';
+  if (m < 1410) return pl(Math.round(m / 60), 'HORA', 'HORAS') + ' DE FEED';
+  if (m < 9360) return pl(Math.round(m / 1440), 'DIA', 'DIAS') + ' DE FEED';
+  if (m < 41200) return pl(Math.round(m / 10080), 'SEMANA', 'SEMANAS') + ' DE FEED';
+  if (m < 495600) return pl(Math.round(m / 43200), 'MÊS', 'MESES') + ' DE FEED';
+  return '1 ANO DE FEED';
+}
+const stageIdx = p => { let k = 0; STAGES.forEach((s, i) => { if (p >= s.p) k = i; }); return k; };
+const fmtNum = (v, d = 1) => v.toFixed(d).replace('.', ',');
+
+function drawOverlay(now) {
+  const ctx = octx, W = out.width, H = out.height, u = W / 1080, m = 64 * u, p = S.p;
+  const live = S.phase === 'ready' || S.phase === 'run' || S.phase === 'done';
+  if (!live) return;
+  ctx.save();
+  ctx.textBaseline = 'alphabetic';
+  // barra de progresso
+  const by = 58 * u, bw = W - 2 * m, bh = 12 * u;
+  ctx.fillStyle = COL.red; ctx.fillRect(m, by, bw * p, bh);
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 2 * u; ctx.strokeRect(m, by, bw, bh);
+  ctx.fillStyle = COL.ink;
+  ctx.font = `400 ${22 * u}px "Space Mono", monospace`; ctx.globalAlpha = 0.85;
+  const idx = 1 + Math.min(4, Math.floor(p * 4 + 1e-6));
+  spaced(ctx, `${idx} / 5`, W - m, by + 52 * u, 6 * u, 'right');
+  ctx.globalAlpha = 1;
+
+  // manchetes: abertura e fecho do carrossel
+  const hs = 84 * u, lh = 88 * u, hy = by + 150 * u;
+  ctx.font = `400 ${hs}px Anton, Impact, sans-serif`;
+  const a1 = S.phase === 'ready' ? 1 : 1 - smooth(0.11, 0.17, p);
+  if (a1 > 0.01) { ctx.globalAlpha = a1; ctx.fillText('QUANTO TEMPO DEMORA', m, hy); ctx.fillText('ATÉ A PELE ENGROSSAR...', m, hy + lh); }
+  const a2 = smooth(0.90, 0.965, p);
+  if (a2 > 0.01) {
+    ctx.globalAlpha = a2; ctx.fillStyle = COL.ink;
+    ctx.fillText('...A PONTO DE NÃO', m, hy);
+    const w1 = ctx.measureText('SENTIRMOS MAIS ').width;
+    ctx.fillText('SENTIRMOS MAIS ', m, hy + lh); ctx.fillStyle = COL.green; ctx.fillText('NADA?', m + w1, hy + lh);
+    ctx.fillStyle = COL.ink; ctx.font = `400 ${18 * u}px "Space Mono", monospace`; ctx.globalAlpha = a2 * 0.85;
+    spaced(ctx, BRAND.linha, m, hy + lh + 48 * u, 3.5 * u);
+  }
+  ctx.globalAlpha = 1; ctx.fillStyle = COL.ink;
+
+  // malha "sujeito detectado" na calibração
+  if (S.hasFace && S.wireT > 0) {
+    ctx.globalAlpha = Math.min(1, S.wireT) * 0.35; ctx.strokeStyle = COL.ink; ctx.lineWidth = 0.8 * u;
+    ctx.beginPath();
+    for (let i = 0; i < EDGES.length; i += 2) { const a = EDGES[i], b = EDGES[i + 1]; ctx.moveTo(PC[a * 3], PC[a * 3 + 1]); ctx.lineTo(PC[b * 3], PC[b * 3 + 1]); }
+    ctx.stroke(); ctx.globalAlpha = Math.min(1, S.wireT);
+    ctx.font = `700 ${18 * u}px "Space Mono", monospace`;
+    const f = pt(152); spaced(ctx, 'SUJEITO DETECTADO · 478 PONTOS', W / 2, f.y + 70 * u, 3 * u, 'center');
+    ctx.globalAlpha = 1;
+  }
+
+  // HUD de medição (estilo termografia)
+  const hudA = params.hud && S.hasFace && (S.phase === 'run' || S.phase === 'ready') ? 1 - smooth(0.86, 0.93, p) : 0;
+  if (hudA > 0.01) {
+    ctx.globalAlpha = hudA;
+    const thick = 2 * Math.pow(25, smooth(0.02, 0.98, p));
+    const sens = params.mode === 'resistir' && S.source !== 'image' ? Math.round(100 * clamp(0.15 + S.react)) : Math.round(100 * (1 - smooth(0.04, 0.95, p)));
+    const t1 = thick < 10 ? `${fmtNum(thick)} mm` : `${fmtNum(thick / 10)} cm`;
+    crosshair(ctx, pt(280), u, `SP1 · ESP. ${t1}`, 1);
+    crosshair(ctx, pt(151), u, `SP2 · SENS. ${sens}%`, -1);
+    ctx.globalAlpha = 1;
+  }
+
+  // rodapé
+  ctx.font = `700 ${30 * u}px "Space Mono", monospace`;
+  spaced(ctx, feedLabel(p), W - m, H - 70 * u, 5 * u, 'right');
+  const end = smooth(0.94, 0.99, p), cap = 1 - smooth(0.87, 0.92, p);
+  ctx.font = `400 ${17 * u}px "Space Mono", monospace`;
+  if (cap > 0.01) {
+    ctx.globalAlpha = cap * 0.7;
+    const k = stageIdx(p);
+    spaced(ctx, `ESTÁGIO ${k + 1}/8 · ${STAGES[k].t}`, m, H - 116 * u, 3 * u);
+  }
+  if (end > 0.01) {
+    ctx.globalAlpha = end;
+    ctx.font = `400 ${62 * u}px Anton, Impact, sans-serif`; ctx.fillText(BRAND.nome, m, H - 112 * u);
+    ctx.font = `400 ${17 * u}px "Space Mono", monospace`; spaced(ctx, BRAND.estreia, m, H - 74 * u, 3 * u);
+  }
+  ctx.globalAlpha = 1;
+
+  // resistir: sinal de reação
+  if (params.mode === 'resistir' && S.phase === 'run' && S.react > 0.45) {
+    ctx.font = `700 ${26 * u}px "Space Mono", monospace`; ctx.fillStyle = COL.green;
+    ctx.globalAlpha = 0.6 + 0.4 * Math.sin(now / 90);
+    spaced(ctx, 'AINDA ARREPIA.', m, H - 170 * u, 5 * u);
+    ctx.globalAlpha = 1; ctx.fillStyle = COL.ink;
+  }
+  // contagem regressiva
+  if (S.countdown > 0) {
+    ctx.font = `400 ${300 * u}px Anton, Impact, sans-serif`; ctx.globalAlpha = 0.92;
+    ctx.textAlign = 'center'; ctx.fillText(String(Math.ceil(S.countdown)), W / 2, H * 0.6); ctx.textAlign = 'left';
+    ctx.font = `700 ${20 * u}px "Space Mono", monospace`;
+    spaced(ctx, params.mode === 'resistir' ? 'MEDINDO SUA SENSIBILIDADE…' : 'FIQUE PARADO. SÓ OLHE.', W / 2, H * 0.6 + 60 * u, 4 * u, 'center');
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+function crosshair(ctx, c, u, label, side) {
+  const r = 24 * u;
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 2.2 * u;
+  ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(c.x - r * 1.6, c.y); ctx.lineTo(c.x - r * 0.55, c.y); ctx.moveTo(c.x + r * 0.55, c.y); ctx.lineTo(c.x + r * 1.6, c.y);
+  ctx.moveTo(c.x, c.y - r * 1.6); ctx.lineTo(c.x, c.y - r * 0.55); ctx.moveTo(c.x, c.y + r * 0.55); ctx.lineTo(c.x, c.y + r * 1.6); ctx.stroke();
+  ctx.beginPath(); ctx.arc(c.x, c.y, 3.5 * u, 0, Math.PI * 2); ctx.stroke();
+  ctx.font = `400 ${17 * u}px "Space Mono", monospace`;
+  const tw = [...label].reduce((a, ch) => a + ctx.measureText(ch).width + 1.5 * u, 0);
+  const lx = side > 0 ? c.x + r * 1.9 : c.x - r * 1.9 - tw - 16 * u, ly = c.y - r * 1.9;
+  ctx.fillStyle = COL.dark; ctx.fillRect(lx, ly - 22 * u, tw + 16 * u, 32 * u);
+  ctx.fillStyle = COL.ink; spaced(ctx, label, lx + 8 * u, ly, 1.5 * u);
+}
+
+function drawIdle(now) {
+  const W = out.width, H = out.height;
+  octx.fillStyle = '#050605'; octx.fillRect(0, 0, W, H);
+}
+
+// ============================================================
+// MediaPipe
+// ============================================================
+async function fetchModel(urls, label, onProg) {
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(res.status);
+      const total = +res.headers.get('content-length') || 0;
+      if (!res.body || !total) { const b = new Uint8Array(await res.arrayBuffer()); onProg(b.length, b.length); return b; }
+      const reader = res.body.getReader(), chunks = []; let got = 0;
+      for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; onProg(got, total); }
+      const buf = new Uint8Array(got); let o = 0; for (const c of chunks) { buf.set(c, o); o += c.length; }
+      return buf;
+    } catch (e) { console.warn('modelo indisponível em', url, e); }
+  }
+  throw new Error('Não consegui baixar o modelo ' + label + '. Confira a internet.');
+}
+function ensureModels() {
+  if (S.modelsPromise) return S.modelsPromise;
+  S.modelsPromise = (async () => {
+    showLoader(true, 'CONECTANDO…', 0.03);
+    const local = location.protocol.startsWith('http');
+    const vision = await import(`${MP_BASE}/vision_bundle.mjs`);
+    const fileset = await vision.FilesetResolver.forVisionTasks(`${MP_BASE}/wasm`);
+    const prog = { face: [0, 3.76e6], seg: [0, 2.5e5] };
+    const tick = () => { const g = prog.face[0] + prog.seg[0], t = prog.face[1] + prog.seg[1]; showLoader(true, `CARREGANDO ${fmtNum(g / 1e6)} / ${fmtNum(t / 1e6)} MB`, 0.05 + 0.85 * g / t); };
+    const [faceBuf, segBuf] = await Promise.all([
+      fetchModel([...(local ? ['models/face_landmarker.task'] : []), ONLINE_MODELS.face], 'do rosto', (g, t) => { prog.face = [g, t]; tick(); }),
+      fetchModel([...(local ? ['models/selfie_segmenter.tflite'] : []), ONLINE_MODELS.seg], 'do recorte', (g, t) => { prog.seg = [g, t]; tick(); }).catch(e => { console.warn(e); return null; }),
+    ]);
+    showLoader(true, 'ACORDANDO A REDE NEURAL…', 0.94);
+    const mk = async delegate => vision.FaceLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetBuffer: faceBuf, delegate }, runningMode: 'VIDEO', numFaces: 1,
+      outputFaceBlendshapes: params.mode === 'resistir', outputFacialTransformationMatrixes: false,
+      minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+    });
+    let face;
+    if (qs.has('cpu')) face = await mk('CPU');
+    else { try { face = await mk('GPU'); } catch (e) { console.warn('GPU indisponível, usando CPU', e); face = await mk('CPU'); } }
+    let seg = null;
+    if (segBuf) {
+      const ms = delegate => vision.ImageSegmenter.createFromOptions(fileset, { baseOptions: { modelAssetBuffer: segBuf, delegate }, runningMode: 'VIDEO', outputConfidenceMasks: true, outputCategoryMask: false });
+      try { seg = await ms('GPU'); } catch (e) { try { seg = await ms('CPU'); } catch (e2) { console.warn('sem recorte de fundo', e2); } }
+    }
+    S.models = { face, seg, mode: 'VIDEO', blend: params.mode === 'resistir' };
+    showLoader(false);
+    return S.models;
+  })();
+  S.modelsPromise.catch(e => { S.modelsPromise = null; showLoader(false); fail(e.message || String(e)); });
+  return S.modelsPromise;
+}
+async function setRunningMode(mode) {
+  const M = S.models; if (M.mode === mode) return;
+  await M.face.setOptions({ runningMode: mode });
+  if (M.seg) await M.seg.setOptions({ runningMode: mode });
+  M.mode = mode;
+}
+function takeLandmarks(list, t, still) {
+  const raw = new Float32Array(NL * 3);
+  for (let i = 0; i < NL; i++) { const q = list[i]; raw[i * 3] = q.x * S.iw; raw[i * 3 + 1] = q.y * S.ih; raw[i * 3 + 2] = q.z * S.iw; }
+  S.lm = still ? raw : euro.filter(raw, t / 1000);
+}
+function takeBlend(res) {
+  const cat = res.faceBlendshapes && res.faceBlendshapes[0] && res.faceBlendshapes[0].categories;
+  if (!cat) return;
+  for (const c of cat) S.blend[c.categoryName] = c.score;
+}
+function takeMask(r) {
+  const masks = r && r.confidenceMasks; if (!masks || !masks.length) return;
+  const mk = masks[masks.length - 1], w = mk.width, h = mk.height, f = mk.getAsFloat32Array();
+  const fresh = !S.seg || S.seg.length !== w * h;
+  if (fresh) { S.seg = new Uint8Array(w * h); S.segW = w; S.segH = h; }
+  const b = S.seg, k = fresh || S.source === 'image' ? 1 : 0.8;
+  for (let i = 0; i < f.length; i++) b[i] += (f[i] * 255 - b[i]) * k;
+  S.segDirty = true; S.segOK = true;
+  if (!S.segChecked && S.lm) {
+    // descobre se a máscara marca a pessoa ou o fundo: amostra no rosto e nos cantos
+    const at = (x, y) => b[clamp(Math.round(y / S.ih * h), 0, h - 1) * w + clamp(Math.round(x / S.iw * w), 0, w - 1)];
+    const face = at(S.lm[6 * 3], S.lm[6 * 3 + 1]), corner = (at(2, 2) + at(S.iw - 3, 2)) / 2;
+    S.segInvert = face < corner; S.segChecked = true;
+  }
+}
+
+// ============================================================
+// Fontes de imagem
+// ============================================================
+const segCan = document.createElement('canvas'), segCtx = segCan.getContext('2d');
+const lumCan = document.createElement('canvas'); lumCan.width = lumCan.height = 64;
+const lumCtx = lumCan.getContext('2d', { willReadFrequently: true });
+function sampleRefLuma(src) {
+  if (!S.lm) return;
+  lumCtx.drawImage(src, 0, 0, 64, 64);
+  const d = lumCtx.getImageData(0, 0, 64, 64).data;
+  let r = 0, g = 0, b = 0, n = 0;
+  for (const i of [50, 280, 151, 9, 205, 425, 117, 346, 4, 101, 330]) {
+    const x = Math.floor(S.lm[i * 3] / S.iw * 64), y = Math.floor(S.lm[i * 3 + 1] / S.ih * 64);
+    if (x < 0 || y < 0 || x > 63 || y > 63) continue;
+    const k = (y * 64 + x) * 4; r += d[k] / 255; g += d[k + 1] / 255; b += d[k + 2] / 255; n++;
+  }
+  if (!n) return;
+  r /= n; g /= n; b /= n;
+  const raw = Math.max(0.03, 0.299 * r + 0.587 * g + 0.114 * b);
+  // normaliza a exposição: selfie clara ou escura chegam ao mesmo palco
+  const expo = clamp(0.40 / raw, 0.5, 2.2);
+  const ref = lerp(raw, Math.pow(clamp(raw * expo), 1.35) * 1.14, params.look);
+  const k = S.source === 'image' || !S.skin ? 1 : 0.15;
+  S.refLuma = lerp(S.refLuma, ref, k); S.exposure = lerp(S.exposure, expo, k);
+  S.skin = S.skin ? S.skin.map((v, i) => lerp(v, [r, g, b][i], k)) : [r, g, b];
+}
+function stopSources() {
+  if (S.stream) S.stream.getTracks().forEach(t => t.stop());
+  if (S.video) { S.video.pause(); S.video.srcObject = null; S.video.removeAttribute('src'); }
+  S.stream = null; S.video = null; S.still = null; S.lm = null; S.hasFace = false; S.seg = null; S.segOK = false; S.segChecked = false; S.crop = null;
+  euro.reset();
+}
+async function startCamera() {
+  stopRun(); stopSources();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  } catch (e) { fail('Sem acesso à câmera. Libere a permissão no navegador ou use uma foto.'); return; }
+  const v = document.createElement('video'); v.playsInline = true; v.muted = true; v.srcObject = stream;
+  await v.play();
+  S.stream = stream; await useLiveVideo(v, 'camera', true);
+}
+async function startVideoFile(url) {
+  stopRun(); stopSources();
+  const v = document.createElement('video'); v.playsInline = true; v.muted = true; v.loop = true; v.src = url;
+  await v.play();
+  await useLiveVideo(v, 'video', false);
+}
+async function useLiveVideo(v, kind, mirror) {
+  await ensureModels(); await setRunningMode('VIDEO');
+  S.video = v; S.source = kind; S.iw = v.videoWidth; S.ih = v.videoHeight; params.mirror = mirror; syncPanel(); resizeTargets();
+  S.p = 0; S.phase = 'ready'; S.wireT = 0; showScreen();
+}
+async function useStill(url) {
+  stopRun(); stopSources();
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Não consegui abrir essa imagem.')); i.src = url; });
+  const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  await ensureModels(); await setRunningMode('IMAGE');
+  S.still = c; S.source = 'image'; S.iw = c.width; S.ih = c.height; params.mirror = false; syncPanel(); resizeTargets();
+  const r = S.models.face.detect(c);
+  if (!r.faceLandmarks || !r.faceLandmarks.length) { S.source = null; fail('Não encontrei um rosto nessa foto. Tente uma foto de frente, com o rosto bem iluminado.'); return; }
+  takeLandmarks(r.faceLandmarks[0], 0, true); S.hasFace = true;
+  if (S.models.seg) S.models.seg.segment(c, takeMask);
+  uploadSource(c); sampleRefLuma(c); updateCrop(true);
+  S.p = 0; S.phase = 'ready'; S.wireT = 1.6; showScreen();
+}
+
+function processLive(now) {
+  const v = S.video; if (!v || v.readyState < 2 || !S.models) return;
+  if (v.currentTime === S.lastVT) return;
+  S.lastVT = v.currentTime; S.frameN++;
+  if (v.videoWidth !== S.iw || v.videoHeight !== S.ih) { S.iw = v.videoWidth; S.ih = v.videoHeight; S.crop = null; }
+  const ts = performance.now();
+  // detecção e recorte se revezam; no quadro sem detecção o rosto é previsto pela velocidade do filtro
+  const detNow = !S.hasFace || S.frameN % 2 === 0;
+  if (detNow) {
+    const r = S.models.face.detectForVideo(v, ts);
+    perf('det', ts);
+    if (r.faceLandmarks && r.faceLandmarks.length) {
+      const wasLost = !S.hasFace;
+      takeLandmarks(r.faceLandmarks[0], ts, false); takeBlend(r);
+      S.hasFace = true; S.lastSeen = ts; S.lastDet = ts;
+      if (wasLost && S.phase === 'ready') S.wireT = 1.6;
+    } else if (ts - S.lastSeen > 450) { S.hasFace = false; euro.reset(); }
+  } else if (euro.x) {
+    const k = clamp((ts - S.lastDet) / 1000, 0, 0.08);
+    if (!S.lmPred || S.lmPred.length !== euro.x.length) S.lmPred = new Float32Array(euro.x.length);
+    for (let i = 0; i < euro.x.length; i++) S.lmPred[i] = euro.x[i] + euro.dx[i] * k;
+    S.lm = S.lmPred;
+  }
+  const t1 = performance.now();
+  if (S.models.seg && !detNow && S.frameN % (isMobile ? 4 : 2) === 1) {
+    // o recorte não precisa de resolução: uma imagem de 256 px de largura basta e a leitura da GPU fica barata
+    const sw = 256, sh = Math.round(256 * S.ih / S.iw);
+    if (segCan.width !== sw || segCan.height !== sh) { segCan.width = sw; segCan.height = sh; }
+    segCtx.drawImage(v, 0, 0, sw, sh);
+    S.models.seg.segmentForVideo(segCan, t1, takeMask);
+  }
+  perf('seg', t1);
+  const t2 = performance.now();
+  uploadSource(v);
+  if (S.frameN % 12 === 0) sampleRefLuma(v);
+  perf('up', t2);
+}
+const PERF = {};
+function perf(k, t0) { const dtm = performance.now() - t0; PERF[k] = PERF[k] == null ? dtm : PERF[k] * 0.9 + dtm * 0.1; }
+
+// ============================================================
+// Linha do tempo, modos, gravação
+// ============================================================
+function reaction() {
+  let e = 0;
+  for (const k of REACT_KEYS) { const v = (S.blend[k] || 0) - ((S.baseline && S.baseline[k]) || 0); if (v > e) e = v; }
+  return smooth(0.10, 0.42, e);
+}
+function beginRun() {
+  if (!S.source || !S.lm) return;
+  S.p = 0; S.elapsed = 0; S.resisted = 0; S.react = 0; S.outcome = null; S.thumbs = []; S.lastThumb = -1; S.videoBlob = null;
+  S.phase = 'run'; S.playing = false; S.countdown = S.source === 'image' ? 0 : 3; S.calib = []; S.wireT = S.source === 'image' ? 0 : 1.4;
+  if (!S.countdown) { S.playing = true; startRecording(); }
+  showScreen();
+}
+function stopRun() { S.playing = false; S.countdown = 0; if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }
+function updateRun(dt) {
+  if (S.wireT > 0 && (S.phase !== 'ready' || S.source === 'image')) S.wireT = Math.max(0, S.wireT - dt * 0.8);
+  if (S.phase !== 'run') return;
+  if (S.countdown > 0) {
+    if (S.hasFace) { S.countdown -= dt; S.calib.push({ ...S.blend }); }
+    if (S.countdown <= 0) {
+      S.countdown = 0;
+      const base = {}; for (const k of REACT_KEYS) { const vals = S.calib.map(b => b[k] || 0).sort((a, b) => a - b); base[k] = vals.length ? vals[Math.floor(vals.length * 0.6)] : 0; }
+      S.baseline = base; S.playing = true; startRecording();
+    }
+    return;
+  }
+  if (!S.playing) return;
+  const live = S.source !== 'image';
+  if (live && !S.hasFace) return;
+  S.elapsed += dt;
+  let rate = 1 / params.duration;
+  if (params.mode === 'resistir' && live) {
+    S.react = lerp(S.react, reaction(), 0.25);
+    rate *= 1.3 - 2.3 * S.react;
+    if (S.react > 0.35) S.resisted += dt;
+  }
+  S.p = clamp(S.p + rate * dt);
+  captureThumb();
+  if (S.p >= 1) finish('done');
+  else if (params.mode === 'resistir' && live && S.elapsed > params.duration * 2.2) finish('resistiu');
+}
+function finish(outcome) {
+  S.playing = false; S.outcome = outcome; S.phase = 'done';
+  setTimeout(() => { if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }, 1800);
+  setTimeout(showScreen, 1900);
+}
+const BOARD_MARKS = [0, 0.14, 0.28, 0.42, 0.56, 0.70, 0.84, 1];
+function captureThumb() {
+  const k = BOARD_MARKS.findIndex(m => S.p >= m && S.lastThumb < BOARD_MARKS.indexOf(m));
+  if (k < 0 || k <= S.lastThumb) return;
+  S.pendingThumb = k;
+}
+function pickMime() {
+  const c = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  return window.MediaRecorder ? c.find(t => MediaRecorder.isTypeSupported(t)) || '' : '';
+}
+function startRecording() {
+  const mime = pickMime(); if (!mime || !out.captureStream) return;
+  try {
+    const rec = new MediaRecorder(out.captureStream(30), { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+    S.recChunks = []; S.videoMime = mime.split(';')[0];
+    rec.ondataavailable = e => { if (e.data && e.data.size) S.recChunks.push(e.data); };
+    rec.onstop = () => { S.videoBlob = new Blob(S.recChunks, { type: S.videoMime }); $('pDlVid').disabled = false; $('pRec').textContent = '● Gravar'; updateResultButtons(); };
+    rec.start(500); S.rec = rec; $('pRec').textContent = '■ Parar';
+  } catch (e) { console.warn('gravação indisponível', e); }
+}
+const videoName = () => `paquidermia-a-pele-engrossa.${S.videoMime.includes('mp4') ? 'mp4' : 'webm'}`;
+function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+function saveImage() { out.toBlob(b => download(b, `paquidermia-${String(Math.round(S.p * 100)).padStart(3, '0')}.png`), 'image/png'); }
+
+function renderBoard() {
+  const cw = 360, chh = Math.round(cw * out.height / out.width), pad = 24, head = 110, cap = 58;
+  const board = document.createElement('canvas'); board.width = pad + (cw + pad) * 4; board.height = head + (chh + cap) * 2 + pad;
+  const b = board.getContext('2d');
+  b.fillStyle = '#050605'; b.fillRect(0, 0, board.width, board.height);
+  b.fillStyle = COL.red; b.fillRect(pad, pad, board.width - 2 * pad, 8);
+  b.fillStyle = COL.ink; b.font = '400 46px Anton, Impact, sans-serif'; b.fillText('A PELE ENGROSSA · PRANCHA DE 8 ESTÁGIOS', pad, 88);
+  const cells = S.source === 'image' ? BOARD_MARKS.map(m => { const keep = S.p; S.p = m; renderAll(performance.now(), true); const c = document.createElement('canvas'); c.width = cw; c.height = chh; c.getContext('2d').drawImage(out, 0, 0, cw, chh); S.p = keep; return c; }) : S.thumbs;
+  if (S.source === 'image') renderAll(performance.now(), true);
+  BOARD_MARKS.forEach((m, i) => {
+    const x = pad + (i % 4) * (cw + pad), y = head + Math.floor(i / 4) * (chh + cap);
+    if (cells[i]) b.drawImage(cells[i], x, y, cw, chh); else { b.strokeStyle = '#333'; b.strokeRect(x, y, cw, chh); }
+    b.fillStyle = COL.ink; b.font = '700 15px "Space Mono", monospace';
+    b.fillText(`${String(i + 1).padStart(2, '0')} · ${feedLabel(m)}`, x, y + chh + 24);
+    b.font = '400 13px "Space Mono", monospace'; b.globalAlpha = 0.7; b.fillText(STAGES[i].t, x, y + chh + 44); b.globalAlpha = 1;
+  });
+  board.toBlob(bl => download(bl, 'paquidermia-prancha-8-estagios.png'), 'image/png');
+}
+
+// ============================================================
+// Laço principal
+// ============================================================
+let lastT = performance.now(), fpsAcc = 0, fpsN = 0;
+function renderAll(now, silent) {
+  if (!S.source || !S.iw || (!S.still && !S.video)) { drawIdle(now); return; }
+  updateCrop(S.source === 'image');
+  const t0 = performance.now();
+  renderScene(now);
+  perf('gl', t0);
+  const t1 = performance.now();
+  octx.drawImage(glCanvas, 0, 0);
+  drawOverlay(now);
+  perf('ov', t1);
+  if (!silent && S.pendingThumb != null) {
+    const k = S.pendingThumb, c = document.createElement('canvas'); c.width = 360; c.height = Math.round(360 * out.height / out.width);
+    c.getContext('2d').drawImage(out, 0, 0, c.width, c.height); S.thumbs[k] = c; S.lastThumb = k; S.pendingThumb = null;
+  }
+}
+function loop(now) {
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  fpsAcc += dt; fpsN++; if (fpsAcc > 1) { S.fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; status(); }
+  try {
+    if (S.source === 'camera' || S.source === 'video') processLive(now);
+    updateRun(dt);
+    renderAll(now);
+    syncProgress();
+    $('msg').classList.toggle('show', (S.source === 'camera' || S.source === 'video') && S.phase !== 'intro' && !S.hasFace && !!S.models);
+  } catch (e) { console.error(e); }
+  requestAnimationFrame(loop);
+}
+
+// ============================================================
+// Interface
+// ============================================================
+function showLoader(on, msg, frac) {
+  $('loader').classList.toggle('show', !!on);
+  if (msg) $('loadMsg').textContent = msg;
+  if (frac != null) $('loadBar').style.width = (frac * 100).toFixed(1) + '%';
+}
+function fail(msg) { S.error = msg; S.phase = 'intro'; showScreen(); $('introNote').textContent = msg; $('introNote').style.color = '#ff8a7a'; }
+function showScreen() {
+  const ph = S.phase;
+  $('intro').classList.toggle('show', ph === 'intro');
+  $('dock').classList.toggle('show', ph === 'ready' || ph === 'run');
+  $('btnStart').style.display = ph === 'ready' ? '' : 'none';
+  $('btnPause').style.display = ph === 'run' ? '' : 'none';
+  $('result').classList.toggle('show', ph === 'done' && !!S.outcome);
+  if (ph === 'done') fillResult();
+  $('btnStart').textContent = params.mode === 'resistir' && S.source !== 'image' ? '▶ Começar a resistir' : '▶ Começar';
+}
+function fillResult() {
+  const res = S.outcome === 'resistiu';
+  $('resTitle').innerHTML = res ? 'Você<br>resistiu.' : 'Metamorfose<br>concluída.';
+  const secs = Math.round(S.resisted);
+  $('resSub').textContent = res ? '(POR ENQUANTO.)' : params.mode === 'resistir' && S.source !== 'image' ? `VOCÊ RESISTIU ${secs} ${secs === 1 ? 'SEGUNDO' : 'SEGUNDOS'} · 1 ANO DE FEED` : '1 ANO DE FEED';
+  $('btnPremium').hidden = !PREMIUM_URL;
+  updateResultButtons();
+}
+function updateResultButtons() {
+  const has = !!S.videoBlob;
+  $('btnDlVideo').disabled = !has;
+  const canShare = has && navigator.canShare && navigator.canShare({ files: [new File([S.videoBlob], videoName(), { type: S.videoMime })] });
+  $('btnShare').style.display = canShare ? '' : 'none';
+  $('btnBoard').disabled = S.source !== 'image' && !S.thumbs.length;
+}
+function syncProgress() { const r = $('pProg'); if (document.activeElement !== r) r.value = Math.round(S.p * 1000); $('pPlay').textContent = S.playing ? '❚❚ Pausar' : '▶ Rodar'; }
+function status() {
+  const lines = [
+    `FONTE: ${S.source ? S.source.toUpperCase() : '—'} ${S.iw ? `${S.iw}×${S.ih}` : ''}`,
+    `ROSTO: ${S.hasFace ? 'SIM' : 'NÃO'} · RECORTE: ${S.segOK ? 'SIM' : 'NÃO'}${S.segInvert ? ' (inv)' : ''}`,
+    `QUADROS: ${S.fps.toFixed(0)} FPS · SAÍDA ${out.width}×${out.height}`,
+    `PROGRESSO: ${Math.round(S.p * 100)}% · ${feedLabel(S.p)}`,
+  ];
+  $('pStatus').textContent = lines.join('\n');
+}
+function setMode(m) {
+  params.mode = m;
+  // as expressões (blendshapes) custam caro: só liga quando o modo Resistir precisa delas
+  const want = m === 'resistir';
+  if (S.models && S.models.blend !== want) { S.models.blend = want; S.models.face.setOptions({ outputFaceBlendshapes: want }).catch(e => console.warn(e)); }
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  $('modeHint').textContent = m === 'resistir' ? 'Só com câmera. Se você reagir (franzir, abrir a boca, sorrir), a pele recua. Impassível, ela avança mais rápido.' : 'A metamorfose corre inteira, do primeiro minuto ao primeiro ano de feed.';
+  showScreen();
+}
+function syncPanel() {
+  document.querySelectorAll('#panel [data-k]').forEach(el => {
+    const k = el.dataset.k;
+    if (el.type === 'checkbox') el.checked = !!params[k];
+    else { el.value = params[k]; el.nextElementSibling.textContent = (+params[k]).toFixed(2); }
+  });
+}
+function pickPhoto() { $('file').value = ''; $('file').click(); }
+
+function wireUI() {
+  document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+  $('btnCam').onclick = $('pCam').onclick = () => { ensureModels(); startCamera(); };
+  $('btnPhoto').onclick = $('pPhoto').onclick = () => { ensureModels(); pickPhoto(); };
+  $('file').onchange = e => { const f = e.target.files && e.target.files[0]; if (f) useStill(URL.createObjectURL(f)).catch(err => fail(err.message)); };
+  $('btnStart').onclick = beginRun;
+  $('btnPause').onclick = () => { if (S.countdown > 0) return; S.playing = !S.playing; $('btnPause').textContent = S.playing ? '❚❚' : '▶'; };
+  $('btnBack').onclick = $('btnHome').onclick = () => { stopRun(); stopSources(); S.source = null; S.phase = 'intro'; showScreen(); };
+  $('btnAgain').onclick = () => { S.phase = 'ready'; S.p = 0; showScreen(); beginRun(); };
+  $('btnDlVideo').onclick = $('pDlVid').onclick = () => S.videoBlob && download(S.videoBlob, videoName());
+  $('btnShare').onclick = async () => { try { await navigator.share({ files: [new File([S.videoBlob], videoName(), { type: S.videoMime })], title: 'Paquidermia', text: 'Quanto tempo demora até a pele engrossar? #Paquidermia' }); } catch (e) { console.warn(e); } };
+  $('btnDlImg').onclick = $('pImg').onclick = saveImage;
+  $('btnBoard').onclick = $('pBoard').onclick = renderBoard;
+  $('btnPremium').onclick = () => PREMIUM_URL && window.open(PREMIUM_URL, '_blank');
+  $('panelToggle').onclick = () => $('panel').classList.toggle('open');
+  $('pProg').oninput = e => { S.p = e.target.value / 1000; S.playing = false; if (S.phase === 'done') { S.phase = 'run'; showScreen(); } };
+  $('pPlay').onclick = () => {
+    if (!S.source) return;
+    if (S.phase === 'ready' || S.phase === 'done') { beginRun(); return; }
+    if (S.p >= 1) S.p = 0;
+    S.playing = !S.playing;
+  };
+  $('pReset').onclick = () => { stopRun(); S.p = 0; if (S.source) { S.phase = 'ready'; showScreen(); } };
+  $('pRec').onclick = () => { if (S.rec && S.rec.state === 'recording') S.rec.stop(); else startRecording(); };
+  $('pDur').onchange = e => { params.duration = +e.target.value; };
+  $('pMask').innerHTML = Object.entries(MASKS).map(([k, m]) => `<option value="${k}">${m.nome}</option>`).join('');
+  $('pMask').value = params.maskKind;
+  $('pMask').onchange = e => useMask(e.target.value);
+  document.querySelectorAll('[data-fmt]').forEach(b => b.onclick = () => {
+    params.format = b.dataset.fmt; document.querySelectorAll('[data-fmt]').forEach(x => x.classList.toggle('on', x === b)); resizeTargets();
+  });
+  document.querySelectorAll('#panel [data-k]').forEach(el => {
+    el.oninput = () => { const k = el.dataset.k; params[k] = el.type === 'checkbox' ? el.checked : +el.value; if (el.type !== 'checkbox') el.nextElementSibling.textContent = (+el.value).toFixed(2); if (k === 'look' && S.still) sampleRefLuma(S.still); };
+  });
+  syncPanel();
+}
+
+async function boot() {
+  try { initGL(); await loadMaskTex(); }
+  catch (e) { console.error(e); fail('Este aparelho não roda a experiência (WebGL2). Tente o Chrome ou o Safari atualizados.'); return; }
+  useMask(qs.get('mascara') === '34' || !MASKS.frontal ? 'tresQuartos' : 'frontal');
+  wireUI(); showScreen();
+  try { await Promise.race([Promise.all([document.fonts.load('80px Anton'), document.fonts.load('700 30px "Space Mono"'), document.fonts.load('400 20px "Space Mono"')]), new Promise(r => setTimeout(r, 2500))]); } catch (e) { /* segue com fontes do sistema */ }
+  requestAnimationFrame(loop);
+  // painel de ajustes só para a equipe: abra com ?diretor no endereço
+  if (qs.has('diretor')) document.body.classList.add('diretor');
+  if (qs.has('teste')) useStill('_teste/selfie.jpg').catch(e => fail(e.message));
+  if (qs.get('video')) startVideoFile(qs.get('video')).catch(e => fail(e.message));
+}
+
+// gancho para testes e ajustes pelo console
+window.PQ = {
+  S, params, PERF, last: () => lastRender, mask: () => MASK,
+  setP(p) { S.p = clamp(p); S.playing = false; S.wireT = 0; if (S.phase === 'done') S.phase = 'run'; if (S.phase === 'ready') S.phase = 'run'; showScreen(); renderAll(performance.now(), true); },
+  useStill, startVideoFile, beginRun, renderBoard,
+  async shot(name) { renderAll(performance.now(), true); const b = await new Promise(r => out.toBlob(r, 'image/png')); const res = await fetch('/__save?name=' + encodeURIComponent(name), { method: 'POST', body: b }); return res.status; },
+};
+boot();
+</script>
+</body>
+</html>
