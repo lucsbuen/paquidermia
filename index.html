@@ -216,7 +216,7 @@ body.diretor #panel{display:block}
     <h3>Modo</h3>
     <div class="seg" id="pMode"><button data-mode="assistir" class="on">ASSISTIR</button><button data-mode="resistir">RESISTIR</button></div>
     <h3>Tempo e formato</h3>
-    <label class="s"><span>Duração</span><select id="pDur"><option selected>15</option><option>20</option><option>30</option><option>40</option></select><span>s</span></label>
+    <label class="s"><span>Duração</span><select id="pDur"><option selected>13</option><option>20</option><option>30</option><option>40</option></select><span>s</span></label>
     <div class="seg" id="pFmt"><button data-fmt="story" class="on">STORY 9:16</button><button data-fmt="feed">FEED 4:5</button></div>
     <h3>Progresso</h3>
     <input type="range" id="pProg" min="0" max="1000" value="0">
@@ -287,20 +287,17 @@ const EYE_L = [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466];
 const LIPS = [61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185];
 const BROW_R = [70,63,105,66,107,55,65,52,53,46];
 const BROW_L = [300,293,334,296,336,285,295,282,283,276];
-const REACT_KEYS = ['browInnerUp','browDownLeft','browDownRight','browOuterUpLeft','browOuterUpRight','eyeWideLeft','eyeWideRight',
-  'eyeSquintLeft','eyeSquintRight','jawOpen','mouthFrownLeft','mouthFrownRight','mouthSmileLeft','mouthSmileRight',
-  'noseSneerLeft','noseSneerRight','mouthPucker','mouthStretchLeft','mouthStretchRight','cheekPuff','mouthPressLeft','mouthPressRight'];
 
 const qs = new URLSearchParams(location.search);
 const isMobile = matchMedia('(pointer:coarse)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
 
 const params = {
-  duration: 15, mode: 'assistir', format: 'story',
+  duration: 13, mode: 'assistir', format: 'story',
   look: 1, relief: 1, gloss: 1, deform: 1, hornScale: 1, maskScale: 1, maskLift: 0,
   grain: 0.055, hud: true, keepBg: false, mirror: true,
   exp: qs.get('exp') === 'vista' ? 'vista' : 'pele', world: 'palco', phrase: 'VOCÊ RESISTIRIA?', custom: '',
 };
-const FRAMING = { story: { faceFrac: 0.29, faceY: 0.53 }, feed: { faceFrac: 0.37, faceY: 0.55 } };
+const FRAMING = { story: { faceFrac: 0.29, faceY: 0.52 }, feed: { faceFrac: 0.37, faceY: 0.55 } };
 
 // ---------- utilidades ----------
 const $ = id => document.getElementById(id);
@@ -352,7 +349,7 @@ const S = {
   crop: null, refLuma: 0.3, exposure: 1, skin: null, seg: null, segW: 0, segH: 0, segDirty: false, segOK: false, segInvert: false, segChecked: false,
   blend: {}, baseline: null, react: 0, resisted: 0, calib: [],
   rec: null, recChunks: [], videoBlob: null, videoMime: '', thumbs: [], lastThumb: -1,
-  fps: 0, models: null, modelsPromise: null, error: null, wireT: 0,
+  fps: 0, models: null, modelsPromise: null, error: null, wireT: 0, vtime: 0, recStopAt: null, afterStop: null,
 };
 const euro = new OneEuro(NL * 3, 2.2, 0.015);
 
@@ -1077,7 +1074,7 @@ function targetCrop() {
   // no fim a câmera recua: a máscara inteira (chifre e orelhas) precisa caber no quadro
   const pull = params.exp === 'vista' ? 1 : smooth(0.80, 0.92, S.p);
   if (pull > 0) {
-    const fitK = params.format === 'feed' ? 0.29 : 0.34;
+    const fitK = params.format === 'feed' ? 0.29 : 0.31;
     const sFit = Math.max(Math.min(s, (H * fitK) / Math.max(fh, 1)), cover * 0.6);
     s = Math.exp(lerp(Math.log(s), Math.log(sFit), pull));
   }
@@ -1347,7 +1344,7 @@ function renderVista(now) {
   gl.uniform2f(P.world.u.uFaceC, g.faceC.x, g.faceC.y); gl.uniform1f(P.world.u.uFaceH, g.faceH);
   gl.uniform2f(P.world.u.uRes, W, H);
   // oval da prancha: retrato em pé nos dois formatos, legenda cabendo embaixo
-  S.oval = params.format === 'feed' ? [0.5, g.faceC.y - 0.02, 0.30, 0.27] : [0.5, g.faceC.y - 0.01, 0.37, 0.254];
+  S.oval = params.format === 'feed' ? [0.5, g.faceC.y - 0.02, 0.30, 0.27] : [0.5, g.faceC.y - 0.03, 0.37, 0.215];
   gl.uniform4fv(P.world.u.uOval, S.oval);
   drawQuad();
   drawPost(now);
@@ -1441,14 +1438,20 @@ function feedLabel(p) {
 const stageIdx = p => { let k = 0; STAGES.forEach((s, i) => { if (p >= s.p) k = i; }); return k; };
 const fmtNum = (v, d = 1) => v.toFixed(d).replace('.', ',');
 
+// zonas seguras do story: o Instagram cobre o topo (perfil, barras de progresso) e a base (campo de resposta),
+// e em celular alto enche a tela cortando as laterais. No feed 4:5 nada disso acontece.
+function safe() {
+  const u = out.width / 1080, story = params.format === 'story';
+  return { u, m: (story ? 100 : 64) * u, top: (story ? 250 : 58) * u, bot: (story ? 290 : 0) * u, story };
+}
 function drawOverlay(now) {
-  const ctx = octx, W = out.width, H = out.height, u = W / 1080, m = 64 * u, p = S.p;
+  const ctx = octx, W = out.width, H = out.height, p = S.p, { u, m, top, bot } = safe();
   const live = S.phase === 'ready' || S.phase === 'run' || S.phase === 'done';
   if (!live) return;
   ctx.save();
   ctx.textBaseline = 'alphabetic';
   // barra de progresso
-  const by = 58 * u, bw = W - 2 * m, bh = 12 * u;
+  const by = top, bw = W - 2 * m, bh = 12 * u;
   ctx.fillStyle = COL.red; ctx.fillRect(m, by, bw * p, bh);
   ctx.strokeStyle = COL.ink; ctx.lineWidth = 2 * u; ctx.strokeRect(m, by, bw, bh);
   ctx.fillStyle = COL.ink;
@@ -1498,18 +1501,18 @@ function drawOverlay(now) {
 
   // rodapé
   ctx.font = `700 ${30 * u}px "Space Mono", monospace`;
-  spaced(ctx, feedLabel(p), W - m, H - 70 * u, 5 * u, 'right');
+  spaced(ctx, feedLabel(p), W - m, H - bot - 70 * u, 5 * u, 'right');
   const end = smooth(0.94, 0.99, p), cap = 1 - smooth(0.87, 0.92, p);
   ctx.font = `400 ${17 * u}px "Space Mono", monospace`;
   if (cap > 0.01) {
     ctx.globalAlpha = cap * 0.7;
     const k = stageIdx(p);
-    spaced(ctx, `ESTÁGIO ${k + 1}/8 · ${STAGES[k].t}`, m, H - 116 * u, 3 * u);
+    spaced(ctx, `ESTÁGIO ${k + 1}/8 · ${STAGES[k].t}`, m, H - bot - 116 * u, 3 * u);
   }
   if (end > 0.01) {
     ctx.globalAlpha = end;
-    ctx.font = `400 ${62 * u}px Anton, Impact, sans-serif`; ctx.fillText(BRAND.nome, m, H - 112 * u);
-    ctx.font = `400 ${17 * u}px "Space Mono", monospace`; spaced(ctx, BRAND.estreia, m, H - 74 * u, 3 * u);
+    ctx.font = `400 ${62 * u}px Anton, Impact, sans-serif`; ctx.fillText(BRAND.nome, m, H - bot - 112 * u);
+    ctx.font = `400 ${17 * u}px "Space Mono", monospace`; spaced(ctx, BRAND.estreia, m, H - bot - 74 * u, 3 * u);
   }
   ctx.globalAlpha = 1;
 
@@ -1517,8 +1520,26 @@ function drawOverlay(now) {
   if (params.mode === 'resistir' && S.phase === 'run' && S.react > 0.45) {
     ctx.font = `700 ${26 * u}px "Space Mono", monospace`; ctx.fillStyle = COL.green;
     ctx.globalAlpha = 0.6 + 0.4 * Math.sin(now / 90);
-    spaced(ctx, 'AINDA ARREPIA.', m, H - 170 * u, 5 * u);
+    spaced(ctx, 'AINDA ARREPIA.', m, H - bot - 170 * u, 5 * u);
     ctx.globalAlpha = 1; ctx.fillStyle = COL.ink;
+  }
+  // fim do Resistir dentro do próprio vídeo: termina num cartão, não num corte
+  if (S.phase === 'done' && params.mode === 'resistir' && S.source !== 'image' && S.recStopAt != null) {
+    const secs = Math.round(S.resisted);
+    if (S.outcome === 'resistiu') {
+      ctx.fillStyle = 'rgba(4,5,4,0.66)'; ctx.fillRect(0, H * 0.34, W, H * 0.3);
+      ctx.textAlign = 'center'; ctx.font = `400 ${150 * u}px Anton, Impact, sans-serif`;
+      ctx.fillStyle = COL.ink; ctx.fillText('VOCÊ', W / 2, H * 0.44); ctx.fillStyle = COL.green; ctx.fillText('RESISTIU.', W / 2, H * 0.44 + 150 * u);
+      ctx.fillStyle = COL.ink; ctx.font = `700 ${24 * u}px "Space Mono", monospace`;
+      spaced(ctx, `(POR ENQUANTO.) · ${secs} ${secs === 1 ? 'SEGUNDO' : 'SEGUNDOS'}`, W / 2, H * 0.44 + 215 * u, 4 * u, 'center');
+      ctx.textAlign = 'left';
+      ctx.font = `400 ${62 * u}px Anton, Impact, sans-serif`; ctx.fillText(BRAND.nome, m, H - bot - 112 * u);
+      ctx.font = `400 ${17 * u}px "Space Mono", monospace`; spaced(ctx, BRAND.estreia, m, H - bot - 74 * u, 3 * u);
+    } else if (secs > 0) {
+      ctx.fillStyle = COL.green; ctx.font = `700 ${24 * u}px "Space Mono", monospace`;
+      spaced(ctx, `VOCÊ RESISTIU ${secs} ${secs === 1 ? 'SEGUNDO' : 'SEGUNDOS'}`, m, H - bot - 170 * u, 4 * u);
+      ctx.fillStyle = COL.ink;
+    }
   }
   // contagem regressiva
   if (S.countdown > 0) {
@@ -1583,7 +1604,7 @@ function ensureModels() {
     showLoader(true, 'ACORDANDO A REDE NEURAL…', 0.94);
     const mk = async delegate => vision.FaceLandmarker.createFromOptions(fileset, {
       baseOptions: { modelAssetBuffer: faceBuf, delegate }, runningMode: 'VIDEO', numFaces: 1,
-      outputFaceBlendshapes: params.mode === 'resistir', outputFacialTransformationMatrixes: false,
+      outputFaceBlendshapes: false, outputFacialTransformationMatrixes: false,
       minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5,
     });
     let face;
@@ -1594,7 +1615,7 @@ function ensureModels() {
       const ms = delegate => vision.ImageSegmenter.createFromOptions(fileset, { baseOptions: { modelAssetBuffer: segBuf, delegate }, runningMode: 'VIDEO', outputConfidenceMasks: true, outputCategoryMask: false });
       try { seg = await ms('GPU'); } catch (e) { try { seg = await ms('CPU'); } catch (e2) { console.warn('sem recorte de fundo', e2); } }
     }
-    S.models = { face, seg, mode: 'VIDEO', blend: params.mode === 'resistir' };
+    S.models = { face, seg, mode: 'VIDEO' };
     showLoader(false);
     return S.models;
   })();
@@ -1747,10 +1768,21 @@ function perf(k, t0) { const dtm = performance.now() - t0; PERF[k] = PERF[k] == 
 // ============================================================
 // Linha do tempo, modos, gravação
 // ============================================================
+// expressão medida pela geometria do rosto: boca abrindo, sorriso, sobrancelhas subindo ou franzindo, olhos
+// arregalando. Usa os 478 pontos que o rastreador já entrega; o modelo de expressões pesaria no celular.
+const EXPR = { boca: [13, 14, 0.035], largura: [61, 291, 0.03], sobrE: [105, 159, 0.02], sobrD: [334, 386, 0.02], franzir: [107, 336, 0.015], olhoE: [159, 145, 0.012], olhoD: [386, 374, 0.012] };
+function exprFeatures() {
+  const L = S.lm; if (!L) return null;
+  const d = (a, b) => Math.hypot(L[a * 3] - L[b * 3], L[a * 3 + 1] - L[b * 3 + 1]);
+  const fh = d(10, 152) || 1, f = {};
+  for (const [k, [a, b]] of Object.entries(EXPR)) f[k] = d(a, b) / fh;
+  return f;
+}
 function reaction() {
+  const f = exprFeatures(); if (!f || !S.baseline) return 0;
   let e = 0;
-  for (const k of REACT_KEYS) { const v = (S.blend[k] || 0) - ((S.baseline && S.baseline[k]) || 0); if (v > e) e = v; }
-  return smooth(0.10, 0.42, e);
+  for (const [k, [, , sc]] of Object.entries(EXPR)) e = Math.max(e, Math.abs(f[k] - S.baseline[k]) / sc);
+  return smooth(0.35, 1.0, e);
 }
 // ritmo: as primeiras rachaduras chegam rápido, o meio anda firme e o clímax (chifre, câmera recuando,
 // máscara) ganha mais tempo. Curva monótona suave passando por estes pontos (tempo → progresso).
@@ -1772,19 +1804,21 @@ function beginRun() {
   S.p = 0; S.tp = 0; S.elapsed = 0; S.resisted = 0; S.react = 0; S.outcome = null; S.thumbs = []; S.lastThumb = -1; S.videoBlob = null;
   // com foto não há contagem; com câmera, 2 s (3 s no Resistir, que precisa medir o rosto neutro)
   S.phase = 'run'; S.playing = false; S.countdown = S.source === 'image' ? 0 : params.mode === 'resistir' ? 3 : 2; S.calib = []; S.wireT = S.source === 'image' ? 0 : 1.4;
-  if (!S.countdown) { S.playing = true; startRecording(); }
+  // a metamorfose só anda quando o gravador está pronto: o vídeo começa no primeiro quadro
+  if (!S.countdown) startRecording().finally(() => { if (S.phase === 'run') S.playing = true; });
   showScreen();
 }
-function stopRun() { S.playing = false; S.countdown = 0; if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }
+function stopRun() { S.playing = false; S.countdown = 0; S.recStopAt = null; S.afterStop = null; if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }
 function updateRun(dt) {
   if (S.wireT > 0 && (S.phase !== 'ready' || S.source === 'image')) S.wireT = Math.max(0, S.wireT - dt * 0.8);
   if (S.phase !== 'run') return;
   if (S.countdown > 0) {
-    if (S.hasFace) { S.countdown -= dt; S.calib.push({ ...S.blend }); }
+    if (S.hasFace) { S.countdown -= dt; const f = exprFeatures(); if (f) S.calib.push(f); }
     if (S.countdown <= 0) {
       S.countdown = 0;
-      const base = {}; for (const k of REACT_KEYS) { const vals = S.calib.map(b => b[k] || 0).sort((a, b) => a - b); base[k] = vals.length ? vals[Math.floor(vals.length * 0.6)] : 0; }
-      S.baseline = base; S.playing = true; startRecording();
+      // rosto neutro = mediana do que se mediu na contagem
+      const base = {}; for (const k of Object.keys(EXPR)) { const vals = S.calib.map(b => b[k]).sort((a, b) => a - b); base[k] = vals.length ? vals[Math.floor(vals.length / 2)] : (exprFeatures() || {})[k] || 0; }
+      S.baseline = base; startRecording().finally(() => { if (S.phase === 'run') S.playing = true; });
     }
     return;
   }
@@ -1806,8 +1840,9 @@ function updateRun(dt) {
 }
 function finish(outcome) {
   S.playing = false; S.outcome = outcome; S.phase = 'done';
-  setTimeout(() => { if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }, 1500);
-  setTimeout(showScreen, 1600);
+  // o cartão final fica no vídeo por tempo de ser lido (no relógio do vídeo, não no da parede)
+  S.recStopAt = S.vtime + (outcome === 'resistiu' ? 2.4 : 1.5);
+  S.afterStop = showScreen;
 }
 const BOARD_MARKS = [0, 0.14, 0.28, 0.42, 0.56, 0.70, 0.84, 1];
 function captureThumb() {
@@ -1819,18 +1854,77 @@ function pickMime() {
   const c = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
   return window.MediaRecorder ? c.find(t => MediaRecorder.isTypeSupported(t)) || '' : '';
 }
-function startRecording() {
+// Gravação: de preferência o próprio codificador do navegador (WebCodecs) e um MP4 padrão, de bloco único e com a
+// duração certa no arquivo; é o que o Instagram lê sem cortar. Sem WebCodecs, cai no MediaRecorder.
+const MUXER_URL = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.mjs';
+let wcPrep = null;
+function prepareWC() {
+  if (!wcPrep) wcPrep = (async () => {
+    if (!window.VideoEncoder || !window.VideoFrame) return null;
+    try { return await import(MUXER_URL); } catch (e) { console.warn('muxer indisponível', e); return null; }
+  })();
+  return wcPrep;
+}
+async function wcConfig(W, H) {
+  for (const codec of ['avc1.4d0028', 'avc1.42e028', 'avc1.42001f']) {
+    const cfg = { codec, width: W, height: H, bitrate: 6_000_000, framerate: 30, avc: { format: 'avc' } };
+    try { const s = await VideoEncoder.isConfigSupported(cfg); if (s && s.supported) return cfg; } catch (e) { /* tenta o próximo */ }
+  }
+  return null;
+}
+function videoReady() {
+  $('pDlVid').disabled = false; $('pRec').textContent = '● Gravar'; updateResultButtons();
+  if (S.onVideo) { const f = S.onVideo; S.onVideo = null; f(S.videoBlob); }
+}
+async function startRecording() {
+  const lib = await prepareWC();
+  const W = out.width, H = out.height;
+  const cfg = lib ? await wcConfig(W, H) : null;
+  if (lib && cfg) {
+    try {
+      const target = new lib.ArrayBufferTarget();
+      const muxer = new lib.Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: 30 }, fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
+      const enc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: e => console.warn('codificador', e) });
+      enc.configure(cfg);
+      S.wc = { enc, muxer, target, v0: S.vtime, n: 0, lastT: -1e9 };
+      S.videoMime = 'video/mp4';
+      S.rec = { state: 'recording', stop: () => finishWC() };
+      $('pRec').textContent = '■ Parar';
+      // primeiro quadro já na largada: garante o quadro-chave com a configuração do codec
+      encodeFrame();
+      return;
+    } catch (e) { console.warn('WebCodecs falhou, usando MediaRecorder', e); S.wc = null; }
+  }
   const mime = pickMime(); if (!mime || !out.captureStream) return;
   try {
     const rec = new MediaRecorder(out.captureStream(30), { mimeType: mime, videoBitsPerSecond: 8_000_000 });
     S.recChunks = []; S.videoMime = mime.split(';')[0];
     rec.ondataavailable = e => { if (e.data && e.data.size) S.recChunks.push(e.data); };
-    rec.onstop = () => {
-      S.videoBlob = new Blob(S.recChunks, { type: S.videoMime }); $('pDlVid').disabled = false; $('pRec').textContent = '● Gravar'; updateResultButtons();
-      if (S.onVideo) { const f = S.onVideo; S.onVideo = null; f(S.videoBlob); }
-    };
-    rec.start(500); S.rec = rec; $('pRec').textContent = '■ Parar';
+    rec.onstop = () => { S.videoBlob = new Blob(S.recChunks, { type: S.videoMime }); videoReady(); };
+    rec.start(); S.rec = rec; $('pRec').textContent = '■ Parar';
   } catch (e) { console.warn('gravação indisponível', e); }
+}
+// um quadro do canvas vira um quadro do vídeo, no relógio do vídeo (S.vtime): com foto, cada quadro desenhado vale
+// 1/30 s e o vídeo sai liso mesmo em aparelho lento; com câmera, o relógio é o de verdade
+function encodeFrame() {
+  const w = S.wc; if (!w || !S.rec || S.rec.state !== 'recording') return;
+  const t = Math.max(0, (S.vtime - w.v0) * 1e6);
+  if (t - w.lastT < 1e6 / 31 || w.enc.encodeQueueSize > (S.source === 'image' ? 10 : 4)) return;
+  try {
+    const frame = new VideoFrame(out, { timestamp: Math.round(t), duration: Math.round(1e6 / 30) });
+    w.enc.encode(frame, { keyFrame: w.n % 30 === 0 }); frame.close();
+    w.n++; w.lastT = t;
+  } catch (e) { console.warn('quadro do vídeo', e); }
+}
+async function finishWC() {
+  const w = S.wc; if (!w) return;
+  S.rec.state = 'inactive'; S.wc = null;
+  let ok = false;
+  try { await w.enc.flush(); w.muxer.finalize(); ok = !!(w.target.buffer && w.target.buffer.byteLength > 1000); } catch (e) { console.warn('finalizar vídeo', e); }
+  try { w.enc.close(); } catch (e) { /* já fechado */ }
+  if (!ok) { S.videoBlob = null; vStat('O VÍDEO FALHOU. TENTE DE NOVO.'); return; }
+  S.videoBlob = new Blob([w.target.buffer], { type: 'video/mp4' });
+  videoReady();
 }
 const videoName = () => `paquidermia-a-pele-engrossa.${S.videoMime.includes('mp4') ? 'mp4' : 'webm'}`;
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
@@ -1908,20 +2002,23 @@ function fitText(ctx, text, maxW, maxLines, maxSize, minSize, font) {
   return { size, lines };
 }
 function drawVistaOverlay(now) {
-  const ctx = octx, W = out.width, H = out.height, u = W / 1080, m = 64 * u;
+  const ctx = octx, W = out.width, H = out.height, { u, m, top, bot, story } = safe();
   const phrase = vistaPhrase(), world = params.world, a = smooth(0.8, 2.2, S.vT);
   if (a <= 0.01) return;
   ctx.save(); ctx.globalAlpha = a; ctx.textBaseline = 'alphabetic';
   if (world === 'arquivo') {
     const ink = '#3a2c1f', fell = (s, it) => `${it ? 'italic ' : ''}400 ${s * u}px "IM Fell English", Georgia, serif`;
-    ctx.strokeStyle = 'rgba(58,44,31,0.85)'; ctx.lineWidth = 2 * u; ctx.strokeRect(W * 0.034, H * 0.025, W * 0.932, H * 0.95);
-    ctx.lineWidth = 1 * u; ctx.strokeRect(W * 0.045, H * 0.033, W * 0.91, H * 0.934);
+    // no story a moldura e o texto recuam para a zona segura
+    const fy0 = story ? top - 70 * u : H * 0.025, fy1 = story ? H - bot + 50 * u : H * 0.975;
+    ctx.strokeStyle = 'rgba(58,44,31,0.85)'; ctx.lineWidth = 2 * u; ctx.strokeRect(W * 0.034, fy0, W * 0.932, fy1 - fy0);
+    ctx.lineWidth = 1 * u; ctx.strokeRect(W * 0.045, fy0 + 14 * u, W * 0.91, fy1 - fy0 - 28 * u);
+    const hy = story ? top + 30 * u : H * 0.072;
     ctx.fillStyle = ink; ctx.textAlign = 'center';
-    ctx.font = fell(26); ctx.fillText('TAB. XV', W * 0.17, H * 0.072); ctx.fillText('PL. VIII', W * 0.83, H * 0.072);
-    ctx.font = fell(32); spaced(ctx, 'RHINOCEROTIDÆ', W / 2, H * 0.072, 6 * u, 'center');
-    ctx.fillRect(W * 0.08, H * 0.086, W * 0.84, 1.5 * u);
+    ctx.font = fell(26); ctx.fillText('TAB. XV', W * 0.17, hy); ctx.fillText('PL. VIII', W * 0.83, hy);
+    ctx.font = fell(32); spaced(ctx, 'RHINOCEROTIDÆ', W / 2, hy, 6 * u, 'center');
+    ctx.fillRect(W * 0.08, hy + 26 * u, W * 0.84, 1.5 * u);
     const t = fitText(ctx, sentence(phrase), W * 0.8, 2, 60, 36, s => fell(s, true));
-    ctx.font = fell(t.size, true); t.lines.forEach((l, i) => ctx.fillText(l, W / 2, H * 0.135 + i * t.size * 1.1 * u));
+    ctx.font = fell(t.size, true); t.lines.forEach((l, i) => ctx.fillText(l, W / 2, hy + 110 * u + i * t.size * 1.1 * u));
     const ov = S.oval || [0.5, 0.5, 0.37, 0.254], ob = (ov[1] + ov[3]) * H;
     if (params.format === 'feed') {
       ctx.font = fell(28, true); ctx.fillText('Fig. 3. Rhinoceros spectator (um chifre · ainda espia)', W / 2, ob + 46 * u);
@@ -1933,10 +2030,10 @@ function drawVistaOverlay(now) {
       ctx.fillRect(W * 0.12, ob + 160 * u, W * 0.76, 1.2 * u);
       ctx.fillStyle = '#31513a'; ctx.font = fell(38, true); ctx.fillText('O corpo aprende a se acostumar.', W / 2, ob + 214 * u);
     }
-    ctx.fillStyle = ink; ctx.font = fell(22); spaced(ctx, 'EM BREVE · PAQUIDERMIA · GRUPO DIGRESSÃO CÊNICA', W / 2, H * 0.952, 2.5 * u, 'center');
+    ctx.fillStyle = ink; ctx.font = fell(22); spaced(ctx, 'EM BREVE · PAQUIDERMIA · GRUPO DIGRESSÃO CÊNICA', W / 2, story ? H - bot : H * 0.952, 2.5 * u, 'center');
     ctx.textAlign = 'left'; ctx.restore(); return;
   }
-  const by = 58 * u;
+  const by = top;
   ctx.fillStyle = COL.red; ctx.fillRect(m, by, W - 2 * m, 12 * u);
   ctx.strokeStyle = COL.ink; ctx.lineWidth = 2 * u; ctx.strokeRect(m, by, W - 2 * m, 12 * u);
   ctx.fillStyle = COL.ink; ctx.font = `400 ${22 * u}px "Space Mono", monospace`;
@@ -1968,9 +2065,9 @@ function drawVistaOverlay(now) {
     if (world === 'coro') spaced(ctx, 'CONTÁGIO / CONTÁGIO / CONTÁGIO', m, hb + 50 * u, 3 * u);
     if (world === 'feed') spaced(ctx, 'ROLAR   /   DESLIZAR   /   REPETIR', m, hb + 50 * u, 3 * u);
   }
-  ctx.font = `400 ${118 * u}px Anton, Impact, sans-serif`; ctx.fillText(BRAND.nome, m, H - 150 * u);
-  ctx.font = `400 ${19 * u}px "Space Mono", monospace`; spaced(ctx, BRAND.linha, m, H - 104 * u, 3.5 * u);
-  ctx.globalAlpha = a * 0.8; spaced(ctx, BRAND.estreia, m, H - 70 * u, 3.5 * u);
+  ctx.font = `400 ${(story ? 104 : 118) * u}px Anton, Impact, sans-serif`; ctx.fillText(BRAND.nome, m, H - bot - 150 * u);
+  ctx.font = `400 ${19 * u}px "Space Mono", monospace`; spaced(ctx, BRAND.linha, m, H - bot - 104 * u, 3.5 * u);
+  ctx.globalAlpha = a * 0.8; spaced(ctx, BRAND.estreia, m, H - bot - 70 * u, 3.5 * u);
   ctx.restore();
 }
 
@@ -2006,12 +2103,12 @@ async function vistaPoster() {
   const f = new File([b], `paquidermia-cartaz-${params.world}.png`, { type: 'image/png' });
   download(b, f.name); offerShare(f); vStat('CARTAZ SALVO.');
 }
-function vistaVideo() {
-  if (!pickMime() || !out.captureStream) { vStat('ESTE NAVEGADOR NÃO GRAVA VÍDEO. USE O CARTAZ.'); return; }
+async function vistaVideo() {
+  if (!(await prepareWC()) && !(pickMime() && out.captureStream)) { vStat('ESTE NAVEGADOR NÃO GRAVA VÍDEO. USE O CARTAZ.'); return; }
   if (S.rec && S.rec.state === 'recording') return;
-  S.vT = 0; startRecording(); vStat('GRAVANDO 8 SEGUNDOS…');
+  await startRecording(); S.vT = 0; vStat('GRAVANDO 8 SEGUNDOS…');
   S.onVideo = blob => { const f = new File([blob], `paquidermia-vista-${params.world}.${S.videoMime.includes('mp4') ? 'mp4' : 'webm'}`, { type: S.videoMime }); download(blob, f.name); offerShare(f); vStat('VÍDEO SALVO.'); };
-  setTimeout(() => { if (S.rec && S.rec.state !== 'inactive') S.rec.stop(); }, 8000);
+  S.recStopAt = S.vtime + 8; S.afterStop = null;
 }
 async function vistaPack(n) {
   const keep = { world: params.world, phrase: params.phrase, custom: params.custom, format: params.format, vT: S.vT };
@@ -2081,6 +2178,7 @@ function renderAll(now, silent) {
   octx.drawImage(glCanvas, 0, 0);
   if (vista) drawVistaOverlay(now); else drawOverlay(now);
   perf('ov', t1);
+  if (!silent) encodeFrame();
   if (!silent && S.pendingThumb != null) {
     const k = S.pendingThumb, c = document.createElement('canvas'); c.width = 360; c.height = Math.round(360 * out.height / out.width);
     c.getContext('2d').drawImage(out, 0, 0, c.width, c.height); S.thumbs[k] = c; S.lastThumb = k; S.pendingThumb = null;
@@ -2090,11 +2188,20 @@ function loop(now) {
   // até 0,5 s por quadro: em aparelho lento a metamorfose pula quadros mas não dura mais do que o combinado
   const dt = Math.min(0.5, (now - lastT) / 1000); lastT = now;
   fpsAcc += dt; fpsN++; if (fpsAcc > 1) { S.fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; status(); }
+  // relógio do vídeo: com foto, no máximo 1/30 s por quadro desenhado (em aparelho lento a tela anda em câmera
+  // lenta, mas o vídeo sai liso e com a duração certa); com câmera, o relógio de verdade
+  const cdt = S.source === 'image' ? Math.min(dt, 1 / 30) : dt;
+  S.vtime = (S.vtime || 0) + cdt;
   try {
     if (S.source === 'camera' || S.source === 'video') processLive(now);
-    if (S.phase === 'vista') S.vT += dt;
-    updateRun(dt);
+    if (S.phase === 'vista') S.vT += cdt;
+    updateRun(cdt);
     renderAll(now);
+    if (S.recStopAt != null && S.vtime >= S.recStopAt) {
+      S.recStopAt = null;
+      if (S.rec && S.rec.state !== 'inactive') S.rec.stop();
+      const f = S.afterStop; S.afterStop = null; if (f) f();
+    }
     syncProgress();
     $('msg').classList.toggle('show', (S.source === 'camera' || S.source === 'video') && S.phase !== 'intro' && !S.hasFace && !!S.models);
   } catch (e) { console.error(e); }
@@ -2149,9 +2256,6 @@ function status() {
 }
 function setMode(m) {
   params.mode = m;
-  // as expressões (blendshapes) custam caro: só liga quando o modo Resistir precisa delas
-  const want = m === 'resistir';
-  if (S.models && S.models.blend !== want) { S.models.blend = want; S.models.face.setOptions({ outputFaceBlendshapes: want }).catch(e => console.warn(e)); }
   document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   $('modeHint').textContent = m === 'resistir' ? 'Só com câmera. Se você reagir (franzir, abrir a boca, sorrir), a pele recua. Impassível, ela avança mais rápido.' : 'A metamorfose corre inteira, do primeiro minuto ao primeiro ano de feed.';
   showScreen();
@@ -2201,7 +2305,7 @@ function wireUI() {
   $('vPhrase').onchange = e => { params.phrase = e.target.value; params.custom = ''; $('vCustom').value = ''; };
   $('vCustom').oninput = e => { params.custom = e.target.value; };
   $('vPng').onclick = () => vistaPoster().catch(e => vStat('ERRO: ' + e.message));
-  $('vVid').onclick = vistaVideo;
+  $('vVid').onclick = () => vistaVideo().catch(e => vStat('ERRO: ' + e.message));
   $('vPack3').onclick = () => vistaPack(3).catch(e => vStat('ERRO: ' + e.message));
   $('vPack5').onclick = () => vistaPack(5).catch(e => vStat('ERRO: ' + e.message));
   $('vShare').onclick = async () => { try { await navigator.share({ files: [S.lastFile], title: 'Paquidermia', text: 'Vista sua paquidermia. #Paquidermia' }); } catch (e) { console.warn(e); } };
@@ -2228,6 +2332,7 @@ async function boot() {
   catch (e) { console.error(e); fail('Este aparelho não roda a experiência (WebGL2). Tente o Chrome ou o Safari atualizados.'); return; }
   useMask(qs.get('mascara') === '34' || !MASKS.frontal ? 'tresQuartos' : 'frontal');
   wireUI(); setExp(params.exp); syncVista(); showScreen();
+  prepareWC();
   try { await Promise.race([Promise.all([document.fonts.load('80px Anton'), document.fonts.load('700 30px "Space Mono"'), document.fonts.load('400 20px "Space Mono"'), document.fonts.load('400 30px "IM Fell English"'), document.fonts.load('italic 400 30px "IM Fell English"')]), new Promise(r => setTimeout(r, 2500))]); } catch (e) { /* segue com fontes do sistema */ }
   requestAnimationFrame(loop);
   // painel de ajustes só para a equipe: abra com ?diretor no endereço
