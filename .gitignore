@@ -2,3 +2,15 @@
 _teste/
 # peças de divulgação geradas localmente
 campanha/
+# planejamento interno da equipe de revisão (tem vídeos feitos com o rosto de teste)
+equipe/
+# rede de segurança: o site não usa vídeo nem foto de pessoa, então nada disso entra por engano
+*.mp4
+*.mov
+*.webm
+*.heic
+selfie.*
+# lixo do sistema
+Thumbs.db
+desktop.ini
+.DS_Store
